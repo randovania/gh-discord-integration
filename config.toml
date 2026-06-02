@@ -15,12 +15,25 @@ dependency_authors = [
     "pre-commit-ci[bot]",
 ]
 
-# Discord webhook URLs per named channel.
-# Set each to the full webhook URL for that Discord channel.
+# Discord channel IDs per named channel.
+# Right-click a channel in Discord (with Developer Mode on) → Copy Channel ID.
+# Bot token is read from the DISCORD_TOKEN environment variable.
 [discord.channels]
-default = ""
-# randovania = "https://discord.com/api/webhooks/..."
-# cave-story  = "https://discord.com/api/webhooks/..."
+default = "914294272579227668"
+library-dev = "1309169554592759879"
+am2r-dev = "1117068391858065509"
+cave-story-dev = "1254054946681257995"
+factorio-dev = "1244352107277189252"
+metroid-dread-dev = "914294339235106836"
+metroid-fusion-dev = "1215675687936196608"
+metroid-planets-dev = "1254054946681257995"
+metroid-prime-dev = "914294412765454426"
+mp2-echoes-dev = "914294505107251231"
+mp3-corruption-dev = "914294515903385650"
+mp-hunters-dev = "1362190173953065162"
+samus-returns-dev = "1048258924790419548"
+metroid-zero-mission-dev = "1506024860164554942"
+super-metroid-dev = "914294375264161843"
 
 # Map repository name → channel name (from discord.channels above).
 # PRs in repos not listed here go to the "default" channel.
@@ -41,6 +54,7 @@ open-prime-hunters-rando        = "mp-hunters-dev"
 open-prime-rando                = "mp2-echoes-dev"
 open-prime-rando-practice-mod   = "mp2-echoes-dev"
 open-samus-returns-rando        = "samus-returns-dev"
+# pr-health-report
 # py-dolphin-memory-engine
 py-randomprime                  = "metroid-prime-dev"
 randomprime                     = "metroid-prime-dev"

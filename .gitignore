@@ -63,3 +63,5 @@ target/
 .codspeed/
 .vscode/
 cache/
+
+/pr_cache.json

@@ -192,7 +192,7 @@ def _format_user(github_login: str, user_map: dict[str, str]) -> str:
 
 def _pr_line(pr: dict, user_map: dict[str, str], *, show_author: bool = False) -> str:
     age = _age_str(pr["age_days"])
-    base = f"• [{pr['repo']}#{pr['number']}](<{pr['url']}>) **{pr['title']}**"
+    base = f"• [{pr['repo']}#{pr['number']}](<{pr['url']}>) {pr['title']}"
     if show_author:
         author = _format_user(pr["author"], user_map)
         return f"{base} — {author} — {age}"
@@ -247,8 +247,11 @@ def build_reports(prs: list[dict], config: dict, dependency_authors: set[str]) -
 # Discord posting
 # ---------------------------------------------------------------------------
 
-def post_to_discord(webhook_url: str, content: str) -> None:
-    # Discord message content limit is 2000 characters; split naively on newlines.
+DISCORD_API = "https://discord.com/api/v10"
+
+
+def _split_message(content: str) -> list[str]:
+    """Split a message into ≤1900-char chunks on line boundaries."""
     chunks: list[str] = []
     current = ""
     for line in content.splitlines(keepends=True):
@@ -260,11 +263,14 @@ def post_to_discord(webhook_url: str, content: str) -> None:
             current += line
     if current:
         chunks.append(current)
+    return chunks
 
-    with httpx.Client() as client:
-        for chunk in chunks:
-            resp = client.post(webhook_url, json={"content": chunk})
-            resp.raise_for_status()
+
+def post_to_channel(client: httpx.Client, channel_id: str, content: str) -> None:
+    url = f"{DISCORD_API}/channels/{channel_id}/messages"
+    for chunk in _split_message(content):
+        resp = client.post(url, json={"content": chunk})
+        resp.raise_for_status()
 
 
 # ---------------------------------------------------------------------------
@@ -284,9 +290,14 @@ def main() -> None:
     with open(config_path, "rb") as f:
         config = tomllib.load(f)
 
-    token = os.environ.get("GITHUB_TOKEN", "")
-    if not token:
+    gh_token = os.environ.get("GITHUB_TOKEN", "")
+    if not gh_token:
         print("GITHUB_TOKEN environment variable is not set.", file=sys.stderr)
+        sys.exit(1)
+
+    discord_token = os.environ.get("DISCORD_TOKEN", "")
+    if not discord_token and not dry_run:
+        print("DISCORD_TOKEN environment variable is not set.", file=sys.stderr)
         sys.exit(1)
 
     github_config = config["github"]
@@ -296,7 +307,7 @@ def main() -> None:
         "dependabot[bot]", "renovate[bot]", "pre-commit-ci[bot]",
     ]))
 
-    prs = fetch_prs(token, org_name, refresh=refresh, skip_repos=skip_repos)
+    prs = fetch_prs(gh_token, org_name, refresh=refresh, skip_repos=skip_repos)
 
     if not prs:
         print("No open non-draft PRs found.")
@@ -305,23 +316,37 @@ def main() -> None:
     reports = build_reports(prs, config, dependency_authors)
     channels_config: dict[str, str] = config.get("discord", {}).get("channels", {})
 
-    for channel_name, content in reports.items():
-        webhook_url = channels_config.get(channel_name, "")
+    default_channel_id = channels_config.get("default", "")
 
-        if dry_run:
-            print(f"\n{'=' * 60}")
-            print(f"Channel: {channel_name}")
-            print("=" * 60)
-            print(content)
-            continue
+    with httpx.Client(headers={"Authorization": f"Bot {discord_token}"}) as client:
+        for channel_name, content in reports.items():
+            channel_id = channels_config.get(channel_name, "")
 
-        if not webhook_url:
-            print(f"[{channel_name}] No webhook URL configured — skipping. (Use --dry-run to preview.)")
-            continue
+            if dry_run:
+                print(f"\n{'=' * 60}")
+                print(f"Channel: {channel_name} (id: {channel_id or 'not configured'})")
+                print("=" * 60)
+                print(content)
+                continue
 
-        print(f"Posting to channel '{channel_name}'…")
-        post_to_discord(webhook_url, content)
-        print(f"  Done.")
+            if not channel_id:
+                print(f"[{channel_name}] No channel ID configured — skipping. (Use --dry-run to preview.)")
+                continue
+
+            print(f"Posting to channel '{channel_name}' ({channel_id})…")
+            try:
+                post_to_channel(client, channel_id, content)
+            except Exception as exc:
+                print(f"  Error: {exc}", file=sys.stderr)
+                if channel_name != "default" and default_channel_id:
+                    error_notice = f"⚠️ Failed to post PR report to **{channel_name}**: {exc}"
+                    print(f"  Forwarding error to default channel ({default_channel_id})…")
+                    try:
+                        post_to_channel(client, default_channel_id, error_notice)
+                    except Exception as inner_exc:
+                        print(f"  Could not reach default channel either: {inner_exc}", file=sys.stderr)
+                continue
+            print("  Done.")
 
 
 if __name__ == "__main__":

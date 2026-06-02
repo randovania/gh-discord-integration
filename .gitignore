@@ -1,0 +1,65 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+.eggs/
+parts/
+sdist/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache
+
+# Translations
+*.mo
+*.pot
+
+# Scrapy stuff:
+.scrapy
+
+# Sphinx documentation
+docs/_build/
+
+# PyBuilder
+target/
+
+# virtualenv
+.venv
+/venv*/
+
+# mypy
+.mypy_cache/
+
+# PyCharm
+/.idea/workspace.xml
+/.idea/misc.xml
+/.idea/randovania.iml
+/.idea/dictionaries/
+/.idea/inspectionProfiles/
+
+# macOS
+.DS_Store
+
+# Vim
+*.swp
+
+.codspeed/
+.vscode/
+cache/

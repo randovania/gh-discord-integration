@@ -1,7 +1,11 @@
 [project]
 name = "pr-health-report"
 version = "0.1.0"
-description = "Add your description here"
+description = "Periodic Discord report on open PR health across the randovania org"
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = []
+dependencies = [
+    "pygithub>=2.0",
+    "httpx>=0.27",
+]
+

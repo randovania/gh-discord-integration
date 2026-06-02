@@ -1,0 +1,1321 @@
+{
+  "cached_at": "2026-06-02T20:06:37.429177+00:00",
+  "prs": [
+    {
+      "repo": "randovania",
+      "number": 9226,
+      "title": "Add a test to ensure that Bootstrap is serializable",
+      "url": "https://github.com/randovania/randovania/pull/9226",
+      "author": "ThanatosGit",
+      "labels": [],
+      "created_at": "2026-06-01T20:48:28+00:00",
+      "updated_at": "2026-06-01T21:21:41+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "henriquegemignani",
+          "state": "APPROVED",
+          "submitted_at": "2026-06-01T21:21:41+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "randovania",
+      "number": 9225,
+      "title": "Prime 1: Don't read invalid Game State while booting up",
+      "url": "https://github.com/randovania/randovania/pull/9225",
+      "author": "Miepee",
+      "labels": [
+        "game: Metroid Prime 1",
+        "feature: Multiworld"
+      ],
+      "created_at": "2026-06-01T16:13:11+00:00",
+      "updated_at": "2026-06-02T10:24:30+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "Miepee",
+          "state": "COMMENTED",
+          "submitted_at": "2026-06-01T16:23:06+00:00"
+        },
+        {
+          "reviewer": "henriquegemignani",
+          "state": "CHANGES_REQUESTED",
+          "submitted_at": "2026-06-02T10:24:30+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "randovania",
+      "number": 9221,
+      "title": "add exporting to echoes OPR",
+      "url": "https://github.com/randovania/randovania/pull/9221",
+      "author": "duncathan",
+      "labels": [
+        "game: Metroid Prime 2 Echoes"
+      ],
+      "created_at": "2026-06-01T04:04:46+00:00",
+      "updated_at": "2026-06-02T15:35:49+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "henriquegemignani",
+          "state": "COMMENTED",
+          "submitted_at": "2026-06-01T13:40:10+00:00"
+        },
+        {
+          "reviewer": "duncathan",
+          "state": "COMMENTED",
+          "submitted_at": "2026-06-02T14:32:02+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "randovania",
+      "number": 9215,
+      "title": "Kraid Trickless Northwest",
+      "url": "https://github.com/randovania/randovania/pull/9215",
+      "author": "steven11sjf",
+      "labels": [
+        "feature: Database",
+        "game: Metroid Zero Mission"
+      ],
+      "created_at": "2026-05-31T02:00:43+00:00",
+      "updated_at": "2026-05-31T02:11:17+00:00",
+      "requested_reviewers": [
+        "JeffGainsNGames"
+      ],
+      "requested_teams": [],
+      "reviews": []
+    },
+    {
+      "repo": "randovania",
+      "number": 9211,
+      "title": "move prime's dangerous gravity out of tricks tab and into generation tab",
+      "url": "https://github.com/randovania/randovania/pull/9211",
+      "author": "duncathan",
+      "labels": [
+        "game: Metroid Prime 1"
+      ],
+      "created_at": "2026-05-30T20:06:29+00:00",
+      "updated_at": "2026-05-31T17:42:40+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "toasterparty",
+          "state": "APPROVED",
+          "submitted_at": "2026-05-31T17:41:25+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "randovania",
+      "number": 9203,
+      "title": "Lock file maintenance",
+      "url": "https://github.com/randovania/randovania/pull/9203",
+      "author": "renovate[bot]",
+      "labels": [],
+      "created_at": "2026-05-30T02:15:44+00:00",
+      "updated_at": "2026-06-02T14:12:35+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": []
+    },
+    {
+      "repo": "randovania",
+      "number": 9198,
+      "title": "Artaria logic update plus several videos",
+      "url": "https://github.com/randovania/randovania/pull/9198",
+      "author": "Logarhythmic",
+      "labels": [
+        "feature: Database",
+        "game: Metroid Dread"
+      ],
+      "created_at": "2026-05-29T13:24:34+00:00",
+      "updated_at": "2026-06-02T19:55:53+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "Tyranisaur",
+          "state": "CHANGES_REQUESTED",
+          "submitted_at": "2026-06-02T19:54:52+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "randovania",
+      "number": 9195,
+      "title": "Also read tracker layouts from local appdata",
+      "url": "https://github.com/randovania/randovania/pull/9195",
+      "author": "henriquegemignani",
+      "labels": [],
+      "created_at": "2026-05-28T18:37:56+00:00",
+      "updated_at": "2026-05-28T18:49:42+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [
+        "core"
+      ],
+      "reviews": []
+    },
+    {
+      "repo": "randovania",
+      "number": 9188,
+      "title": "ZM: add Ziplines as StartingItemCategory, enable a few patcher options",
+      "url": "https://github.com/randovania/randovania/pull/9188",
+      "author": "JeffGainsNGames",
+      "labels": [
+        "feature: Configuration",
+        "game: Metroid Zero Mission"
+      ],
+      "created_at": "2026-05-27T02:15:16+00:00",
+      "updated_at": "2026-05-29T21:30:06+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [
+        "core"
+      ],
+      "reviews": []
+    },
+    {
+      "repo": "randovania",
+      "number": 9181,
+      "title": "Fix typos in Knowledge description and Twin Caverns Save Room name",
+      "url": "https://github.com/randovania/randovania/pull/9181",
+      "author": "StalledStorm",
+      "labels": [
+        "game: Metroid Fusion"
+      ],
+      "created_at": "2026-05-25T14:01:00+00:00",
+      "updated_at": "2026-06-01T18:19:33+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": []
+    },
+    {
+      "repo": "randovania",
+      "number": 9180,
+      "title": "Dark Stairwell <-> Central Nexus Connection Fixes",
+      "url": "https://github.com/randovania/randovania/pull/9180",
+      "author": "StalledStorm",
+      "labels": [
+        "feature: Database",
+        "game: Metroid Fusion"
+      ],
+      "created_at": "2026-05-25T12:24:57+00:00",
+      "updated_at": "2026-06-01T18:21:42+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": []
+    },
+    {
+      "repo": "randovania",
+      "number": 9175,
+      "title": "ZM: brinstar logic pass, include hints and save starting data",
+      "url": "https://github.com/randovania/randovania/pull/9175",
+      "author": "JeffGainsNGames",
+      "labels": [
+        "feature: Database",
+        "game: Metroid Zero Mission"
+      ],
+      "created_at": "2026-05-23T18:38:58+00:00",
+      "updated_at": "2026-05-28T03:46:28+00:00",
+      "requested_reviewers": [
+        "kirbymastah",
+        "M4RKERSM4SK"
+      ],
+      "requested_teams": [
+        "core"
+      ],
+      "reviews": [
+        {
+          "reviewer": "Dragonfangs",
+          "state": "APPROVED",
+          "submitted_at": "2026-05-25T20:56:40+00:00"
+        },
+        {
+          "reviewer": "JeffGainsNGames",
+          "state": "COMMENTED",
+          "submitted_at": "2026-05-28T03:36:34+00:00"
+        },
+        {
+          "reviewer": "steven11sjf",
+          "state": "CHANGES_REQUESTED",
+          "submitted_at": "2026-05-28T02:59:32+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "randovania",
+      "number": 9153,
+      "title": "Add as_resource_gain_of_type",
+      "url": "https://github.com/randovania/randovania/pull/9153",
+      "author": "henriquegemignani",
+      "labels": [],
+      "created_at": "2026-05-18T15:41:56+00:00",
+      "updated_at": "2026-05-18T15:41:56+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [
+        "core"
+      ],
+      "reviews": []
+    },
+    {
+      "repo": "randovania",
+      "number": 9126,
+      "title": "Added short boosts and ADC tricks",
+      "url": "https://github.com/randovania/randovania/pull/9126",
+      "author": "preston-mouw",
+      "labels": [
+        "feature: Database",
+        "game: Metroid Dread"
+      ],
+      "created_at": "2026-05-10T09:01:38+00:00",
+      "updated_at": "2026-05-19T20:52:24+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "Tyranisaur",
+          "state": "CHANGES_REQUESTED",
+          "submitted_at": "2026-05-19T19:48:25+00:00"
+        },
+        {
+          "reviewer": "preston-mouw",
+          "state": "COMMENTED",
+          "submitted_at": "2026-05-14T17:51:32+00:00"
+        },
+        {
+          "reviewer": "duncathan",
+          "state": "COMMENTED",
+          "submitted_at": "2026-05-14T17:27:34+00:00"
+        },
+        {
+          "reviewer": "XenoWars",
+          "state": "CHANGES_REQUESTED",
+          "submitted_at": "2026-05-19T20:52:24+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "randovania",
+      "number": 9117,
+      "title": "Logic updates 5-'26: SRX and NOC",
+      "url": "https://github.com/randovania/randovania/pull/9117",
+      "author": "JaggerTSG",
+      "labels": [
+        "feature: Database",
+        "game: Metroid Fusion"
+      ],
+      "created_at": "2026-05-08T11:58:15+00:00",
+      "updated_at": "2026-05-25T14:55:08+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [
+        "metroid-fusion-db"
+      ],
+      "reviews": []
+    },
+    {
+      "repo": "randovania",
+      "number": 9036,
+      "title": "Fix debug inventory slot signature for InventoryUpdated signal",
+      "url": "https://github.com/randovania/randovania/pull/9036",
+      "author": "Eraldoe",
+      "labels": [],
+      "created_at": "2026-03-23T01:31:01+00:00",
+      "updated_at": "2026-03-23T01:55:27+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "duncathan",
+          "state": "CHANGES_REQUESTED",
+          "submitted_at": "2026-03-23T01:45:10+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "randovania",
+      "number": 9035,
+      "title": "fix randovania/gui/multiworld_client.py RuntimeError: dictionary changed size during iteration",
+      "url": "https://github.com/randovania/randovania/pull/9035",
+      "author": "Eraldoe",
+      "labels": [],
+      "created_at": "2026-03-23T01:14:00+00:00",
+      "updated_at": "2026-03-23T20:16:07+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "duncathan",
+          "state": "COMMENTED",
+          "submitted_at": "2026-03-23T20:08:41+00:00"
+        },
+        {
+          "reviewer": "Eraldoe",
+          "state": "COMMENTED",
+          "submitted_at": "2026-03-23T18:59:14+00:00"
+        },
+        {
+          "reviewer": "henriquegemignani",
+          "state": "CHANGES_REQUESTED",
+          "submitted_at": "2026-03-23T20:16:07+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "randovania",
+      "number": 9025,
+      "title": "Fix unshuffled docks in IDLR being unlocked instead of vanilla",
+      "url": "https://github.com/randovania/randovania/pull/9025",
+      "author": "Tyranisaur",
+      "labels": [
+        "feature: Generator"
+      ],
+      "created_at": "2026-03-17T22:35:16+00:00",
+      "updated_at": "2026-03-21T21:01:21+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "JeffGainsNGames",
+          "state": "COMMENTED",
+          "submitted_at": "2026-03-18T18:21:16+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "randovania",
+      "number": 8969,
+      "title": "Fix some old rdvgames with nothing hints not migrating",
+      "url": "https://github.com/randovania/randovania/pull/8969",
+      "author": "Miepee",
+      "labels": [],
+      "created_at": "2026-02-17T20:53:46+00:00",
+      "updated_at": "2026-02-19T16:26:57+00:00",
+      "requested_reviewers": [
+        "duncathan"
+      ],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "Miepee",
+          "state": "COMMENTED",
+          "submitted_at": "2026-02-19T16:26:57+00:00"
+        },
+        {
+          "reviewer": "henriquegemignani",
+          "state": "COMMENTED",
+          "submitted_at": "2026-02-19T15:56:36+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "randovania",
+      "number": 8891,
+      "title": "Add remote activation nodes",
+      "url": "https://github.com/randovania/randovania/pull/8891",
+      "author": "Miepee",
+      "labels": [
+        "feature: Database",
+        "feature: Core"
+      ],
+      "created_at": "2025-12-30T16:11:44+00:00",
+      "updated_at": "2026-01-13T19:05:34+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "henriquegemignani",
+          "state": "COMMENTED",
+          "submitted_at": "2026-01-01T14:01:55+00:00"
+        },
+        {
+          "reviewer": "Miepee",
+          "state": "COMMENTED",
+          "submitted_at": "2026-01-01T13:15:40+00:00"
+        },
+        {
+          "reviewer": "Tyranisaur",
+          "state": "COMMENTED",
+          "submitted_at": "2026-01-01T14:22:43+00:00"
+        },
+        {
+          "reviewer": "duncathan",
+          "state": "COMMENTED",
+          "submitted_at": "2026-01-01T19:06:54+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "randovania",
+      "number": 8789,
+      "title": "Add more joke hints",
+      "url": "https://github.com/randovania/randovania/pull/8789",
+      "author": "Miepee",
+      "labels": [
+        "game: Metroid Prime 2 Echoes",
+        "game: Metroid Fusion"
+      ],
+      "created_at": "2025-11-17T22:25:25+00:00",
+      "updated_at": "2025-11-17T23:26:17+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "duncathan",
+          "state": "COMMENTED",
+          "submitted_at": "2025-11-17T23:20:28+00:00"
+        },
+        {
+          "reviewer": "JeffGainsNGames",
+          "state": "COMMENTED",
+          "submitted_at": "2025-11-17T23:01:56+00:00"
+        },
+        {
+          "reviewer": "Miepee",
+          "state": "COMMENTED",
+          "submitted_at": "2025-11-17T23:26:17+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "randovania",
+      "number": 8707,
+      "title": "Increase Precision for Standard Pickup Priority",
+      "url": "https://github.com/randovania/randovania/pull/8707",
+      "author": "Miepee",
+      "labels": [
+        "feature: Configuration"
+      ],
+      "created_at": "2025-11-01T18:44:43+00:00",
+      "updated_at": "2025-11-01T18:55:35+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": []
+    },
+    {
+      "repo": "randovania",
+      "number": 8684,
+      "title": "Web api for viewing async rooms",
+      "url": "https://github.com/randovania/randovania/pull/8684",
+      "author": "Miepee",
+      "labels": [
+        "feature: Server"
+      ],
+      "created_at": "2025-10-27T19:40:50+00:00",
+      "updated_at": "2025-10-28T18:33:48+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "duncathan",
+          "state": "CHANGES_REQUESTED",
+          "submitted_at": "2025-10-27T20:54:25+00:00"
+        },
+        {
+          "reviewer": "Miepee",
+          "state": "COMMENTED",
+          "submitted_at": "2025-10-27T20:55:49+00:00"
+        },
+        {
+          "reviewer": "henriquegemignani",
+          "state": "COMMENTED",
+          "submitted_at": "2025-10-28T18:33:48+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "randovania",
+      "number": 8512,
+      "title": "Fix a lot of mypy errors in multiplayer_session_window",
+      "url": "https://github.com/randovania/randovania/pull/8512",
+      "author": "Miepee",
+      "labels": [],
+      "created_at": "2025-09-20T16:17:04+00:00",
+      "updated_at": "2026-04-03T21:41:15+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "henriquegemignani",
+          "state": "COMMENTED",
+          "submitted_at": "2025-09-21T14:20:59+00:00"
+        },
+        {
+          "reviewer": "duncathan",
+          "state": "CHANGES_REQUESTED",
+          "submitted_at": "2025-10-29T01:25:41+00:00"
+        },
+        {
+          "reviewer": "Miepee",
+          "state": "COMMENTED",
+          "submitted_at": "2025-09-21T15:13:28+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "randovania",
+      "number": 8493,
+      "title": "WIP: Item collection notifications discord webhook",
+      "url": "https://github.com/randovania/randovania/pull/8493",
+      "author": "Kwonunn",
+      "labels": [],
+      "created_at": "2025-09-10T14:18:51+00:00",
+      "updated_at": "2025-10-21T12:02:27+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": []
+    },
+    {
+      "repo": "randovania",
+      "number": 8445,
+      "title": "Fix expected trick usage edge cases",
+      "url": "https://github.com/randovania/randovania/pull/8445",
+      "author": "SchwartzGandhi",
+      "labels": [],
+      "created_at": "2025-08-10T19:10:14+00:00",
+      "updated_at": "2025-10-21T12:02:27+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "Miepee",
+          "state": "COMMENTED",
+          "submitted_at": "2025-08-10T20:46:16+00:00"
+        },
+        {
+          "reviewer": "SchwartzGandhi",
+          "state": "COMMENTED",
+          "submitted_at": "2025-08-10T22:03:16+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "randovania",
+      "number": 8107,
+      "title": "Split HintNode into multiple subclasses",
+      "url": "https://github.com/randovania/randovania/pull/8107",
+      "author": "duncathan",
+      "labels": [
+        "feature: Database",
+        "feature: GUI",
+        "feature: Hints"
+      ],
+      "created_at": "2025-03-12T23:59:42+00:00",
+      "updated_at": "2026-05-11T10:10:48+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "henriquegemignani",
+          "state": "CHANGES_REQUESTED",
+          "submitted_at": "2025-03-20T11:39:08+00:00"
+        },
+        {
+          "reviewer": "duncathan",
+          "state": "COMMENTED",
+          "submitted_at": "2025-03-13T00:20:43+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "randovania",
+      "number": 7745,
+      "title": "Add support for launching Dolphin from within RDV",
+      "url": "https://github.com/randovania/randovania/pull/7745",
+      "author": "ToxicFrog",
+      "labels": [
+        "feature: Multiworld",
+        "feature: GUI"
+      ],
+      "created_at": "2025-01-20T03:35:03+00:00",
+      "updated_at": "2025-01-30T10:32:32+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "ThanatosGit",
+          "state": "CHANGES_REQUESTED",
+          "submitted_at": "2025-01-22T18:43:28+00:00"
+        },
+        {
+          "reviewer": "henriquegemignani",
+          "state": "CHANGES_REQUESTED",
+          "submitted_at": "2025-01-30T10:32:32+00:00"
+        },
+        {
+          "reviewer": "ToxicFrog",
+          "state": "COMMENTED",
+          "submitted_at": "2025-01-29T02:44:51+00:00"
+        },
+        {
+          "reviewer": "duncathan",
+          "state": "COMMENTED",
+          "submitted_at": "2025-01-29T03:29:09+00:00"
+        },
+        {
+          "reviewer": "Miepee",
+          "state": "COMMENTED",
+          "submitted_at": "2025-01-25T08:23:46+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "randovania",
+      "number": 7626,
+      "title": "replace Prime 1 flavor scans with advice",
+      "url": "https://github.com/randovania/randovania/pull/7626",
+      "author": "Shaleblade",
+      "labels": [
+        "game: Metroid Prime 1"
+      ],
+      "created_at": "2024-12-16T02:38:56+00:00",
+      "updated_at": "2025-10-19T20:17:22+00:00",
+      "requested_reviewers": [
+        "Samuel6710"
+      ],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "Samuel6710",
+          "state": "CHANGES_REQUESTED",
+          "submitted_at": "2024-12-16T19:52:15+00:00"
+        },
+        {
+          "reviewer": "Shaleblade",
+          "state": "COMMENTED",
+          "submitted_at": "2025-10-19T20:17:22+00:00"
+        },
+        {
+          "reviewer": "Miepee",
+          "state": "COMMENTED",
+          "submitted_at": "2025-10-19T17:17:36+00:00"
+        },
+        {
+          "reviewer": "toasterparty",
+          "state": "COMMENTED",
+          "submitted_at": "2025-04-27T22:45:02+00:00"
+        },
+        {
+          "reviewer": "SeBiTaS908",
+          "state": "APPROVED",
+          "submitted_at": "2025-07-08T15:54:36+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "terraform",
+      "number": 32,
+      "title": "Update actions/checkout action to v6",
+      "url": "https://github.com/randovania/terraform/pull/32",
+      "author": "renovate[bot]",
+      "labels": [],
+      "created_at": "2025-11-20T18:35:51+00:00",
+      "updated_at": "2026-04-29T21:39:20+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": []
+    },
+    {
+      "repo": "terraform",
+      "number": 29,
+      "title": "Update Terraform digitalocean to v2.85.1",
+      "url": "https://github.com/randovania/terraform/pull/29",
+      "author": "renovate[bot]",
+      "labels": [],
+      "created_at": "2025-07-18T16:06:56+00:00",
+      "updated_at": "2026-05-06T13:01:46+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": []
+    },
+    {
+      "repo": "retro-data-structures",
+      "number": 265,
+      "title": "Fix GcDisc building not matching raw data",
+      "url": "https://github.com/randovania/retro-data-structures/pull/265",
+      "author": "henriquegemignani",
+      "labels": [],
+      "created_at": "2026-04-05T12:05:11+00:00",
+      "updated_at": "2026-04-29T18:03:04+00:00",
+      "requested_reviewers": [
+        "duncathan"
+      ],
+      "requested_teams": [],
+      "reviews": []
+    },
+    {
+      "repo": "retro-data-structures",
+      "number": 258,
+      "title": "Add script for comparing differences between ISOs",
+      "url": "https://github.com/randovania/retro-data-structures/pull/258",
+      "author": "henriquegemignani",
+      "labels": [],
+      "created_at": "2026-03-08T15:51:25+00:00",
+      "updated_at": "2026-04-29T17:55:02+00:00",
+      "requested_reviewers": [
+        "duncathan"
+      ],
+      "requested_teams": [],
+      "reviews": []
+    },
+    {
+      "repo": "retro-data-structures",
+      "number": 235,
+      "title": "Implement Prime 1's MREA building",
+      "url": "https://github.com/randovania/retro-data-structures/pull/235",
+      "author": "henriquegemignani",
+      "labels": [],
+      "created_at": "2025-10-29T17:49:06+00:00",
+      "updated_at": "2025-10-29T19:53:05+00:00",
+      "requested_reviewers": [
+        "duncathan"
+      ],
+      "requested_teams": [],
+      "reviews": []
+    },
+    {
+      "repo": "retro-data-structures",
+      "number": 170,
+      "title": "Add RULE format",
+      "url": "https://github.com/randovania/retro-data-structures/pull/170",
+      "author": "henriquegemignani",
+      "labels": [],
+      "created_at": "2025-01-26T22:07:58+00:00",
+      "updated_at": "2025-04-11T07:42:33+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "duncathan",
+          "state": "CHANGES_REQUESTED",
+          "submitted_at": "2025-04-11T03:20:00+00:00"
+        },
+        {
+          "reviewer": "henriquegemignani",
+          "state": "COMMENTED",
+          "submitted_at": "2025-04-11T07:42:33+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "Super-Duper-Metroid",
+      "number": 62,
+      "title": "Experimental -> Main",
+      "url": "https://github.com/randovania/Super-Duper-Metroid/pull/62",
+      "author": "SolventMercury",
+      "labels": [],
+      "created_at": "2023-09-19T23:08:53+00:00",
+      "updated_at": "2023-09-27T19:39:50+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "Miepee",
+          "state": "COMMENTED",
+          "submitted_at": "2023-09-27T19:39:50+00:00"
+        },
+        {
+          "reviewer": "SolventMercury",
+          "state": "COMMENTED",
+          "submitted_at": "2023-09-27T19:39:11+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "Super-Duper-Metroid",
+      "number": 61,
+      "title": "Remove BPS patcher references",
+      "url": "https://github.com/randovania/Super-Duper-Metroid/pull/61",
+      "author": "Miepee",
+      "labels": [],
+      "created_at": "2023-09-12T15:59:25+00:00",
+      "updated_at": "2023-09-12T16:46:55+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": []
+    },
+    {
+      "repo": "open-prime-rando",
+      "number": 343,
+      "title": "docs: add standalone patcher usage to README",
+      "url": "https://github.com/randovania/open-prime-rando/pull/343",
+      "author": "ded-furby",
+      "labels": [],
+      "created_at": "2026-06-02T17:28:03+00:00",
+      "updated_at": "2026-06-02T17:28:03+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": []
+    },
+    {
+      "repo": "open-prime-rando",
+      "number": 341,
+      "title": "[pre-commit.ci] pre-commit autoupdate",
+      "url": "https://github.com/randovania/open-prime-rando/pull/341",
+      "author": "pre-commit-ci[bot]",
+      "labels": [],
+      "created_at": "2026-06-01T22:22:21+00:00",
+      "updated_at": "2026-06-01T22:43:01+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "github-actions[bot]",
+          "state": "APPROVED",
+          "submitted_at": "2026-06-01T22:22:35+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "open-prime-rando",
+      "number": 331,
+      "title": "Some ironing in Torvus Temple patches",
+      "url": "https://github.com/randovania/open-prime-rando/pull/331",
+      "author": "MrMiguel211",
+      "labels": [],
+      "created_at": "2026-05-31T03:05:05+00:00",
+      "updated_at": "2026-06-02T00:33:25+00:00",
+      "requested_reviewers": [
+        "duncathan"
+      ],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "duncathan",
+          "state": "COMMENTED",
+          "submitted_at": "2026-06-01T20:47:56+00:00"
+        },
+        {
+          "reviewer": "MrMiguel211",
+          "state": "COMMENTED",
+          "submitted_at": "2026-06-01T21:21:22+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "open-prime-rando",
+      "number": 304,
+      "title": "update/add map key icons",
+      "url": "https://github.com/randovania/open-prime-rando/pull/304",
+      "author": "Uncle-Reggie",
+      "labels": [
+        "enhancement"
+      ],
+      "created_at": "2026-05-21T15:29:57+00:00",
+      "updated_at": "2026-05-26T17:47:22+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": []
+    },
+    {
+      "repo": "open-prime-rando",
+      "number": 108,
+      "title": "Widescreen HUD Hack Patch for Echoes",
+      "url": "https://github.com/randovania/open-prime-rando/pull/108",
+      "author": "Nystrata",
+      "labels": [],
+      "created_at": "2024-07-27T22:05:26+00:00",
+      "updated_at": "2026-05-13T03:25:17+00:00",
+      "requested_reviewers": [
+        "henriquegemignani"
+      ],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "duncathan",
+          "state": "CHANGES_REQUESTED",
+          "submitted_at": "2025-03-07T14:02:49+00:00"
+        },
+        {
+          "reviewer": "Nystrata",
+          "state": "COMMENTED",
+          "submitted_at": "2025-03-05T15:38:28+00:00"
+        },
+        {
+          "reviewer": "henriquegemignani",
+          "state": "CHANGES_REQUESTED",
+          "submitted_at": "2025-01-17T09:52:02+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "mercury-engine-data-structures",
+      "number": 280,
+      "title": "Add more methods to BRSA",
+      "url": "https://github.com/randovania/mercury-engine-data-structures/pull/280",
+      "author": "MayberryZoom",
+      "labels": [
+        "game: Metroid Dread"
+      ],
+      "created_at": "2025-03-02T04:26:40+00:00",
+      "updated_at": "2025-03-04T05:39:39+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "duncathan",
+          "state": "COMMENTED",
+          "submitted_at": "2025-03-04T05:39:39+00:00"
+        },
+        {
+          "reviewer": "MayberryZoom",
+          "state": "COMMENTED",
+          "submitted_at": "2025-03-04T05:35:01+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "mercury-engine-data-structures",
+      "number": 264,
+      "title": "Updates to `collision.py`",
+      "url": "https://github.com/randovania/mercury-engine-data-structures/pull/264",
+      "author": "dyceron",
+      "labels": [],
+      "created_at": "2025-01-10T03:52:29+00:00",
+      "updated_at": "2025-07-30T01:47:28+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "duncathan",
+          "state": "CHANGES_REQUESTED",
+          "submitted_at": "2025-02-12T22:14:02+00:00"
+        },
+        {
+          "reviewer": "dyceron",
+          "state": "COMMENTED",
+          "submitted_at": "2025-01-14T03:15:40+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "mercury-engine-data-structures",
+      "number": 258,
+      "title": "BMSLD Updates",
+      "url": "https://github.com/randovania/mercury-engine-data-structures/pull/258",
+      "author": "dyceron",
+      "labels": [
+        "game: Metroid: Samus Returns"
+      ],
+      "created_at": "2024-12-26T17:09:57+00:00",
+      "updated_at": "2026-04-05T16:03:13+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "duncathan",
+          "state": "APPROVED",
+          "submitted_at": "2025-10-29T01:45:19+00:00"
+        },
+        {
+          "reviewer": "dyceron",
+          "state": "COMMENTED",
+          "submitted_at": "2025-01-07T17:50:45+00:00"
+        },
+        {
+          "reviewer": "henriquegemignani",
+          "state": "COMMENTED",
+          "submitted_at": "2024-12-26T21:17:33+00:00"
+        },
+        {
+          "reviewer": "ThanatosGit",
+          "state": "COMMENTED",
+          "submitted_at": "2024-12-30T17:40:24+00:00"
+        },
+        {
+          "reviewer": "Miepee",
+          "state": "COMMENTED",
+          "submitted_at": "2024-12-31T03:38:40+00:00"
+        },
+        {
+          "reviewer": "steven11sjf",
+          "state": "COMMENTED",
+          "submitted_at": "2025-01-07T17:42:55+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "mercury-engine-data-structures",
+      "number": 220,
+      "title": "bfont format",
+      "url": "https://github.com/randovania/mercury-engine-data-structures/pull/220",
+      "author": "steven11sjf",
+      "labels": [],
+      "created_at": "2024-09-06T21:26:58+00:00",
+      "updated_at": "2026-04-04T02:37:44+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "henriquegemignani",
+          "state": "CHANGES_REQUESTED",
+          "submitted_at": "2024-10-11T14:07:37+00:00"
+        },
+        {
+          "reviewer": "steven11sjf",
+          "state": "COMMENTED",
+          "submitted_at": "2024-10-18T17:53:37+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "dread-editor",
+      "number": 227,
+      "title": "Bump setuptools-scm from 7.1.0 to 8.1.0",
+      "url": "https://github.com/randovania/dread-editor/pull/227",
+      "author": "dependabot[bot]",
+      "labels": [
+        "dependencies",
+        "python"
+      ],
+      "created_at": "2024-05-06T23:13:32+00:00",
+      "updated_at": "2024-05-06T23:13:33+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": []
+    },
+    {
+      "repo": "dread-editor",
+      "number": 226,
+      "title": "Bump svenstaro/upload-release-action from 2.7.0 to 2.9.0",
+      "url": "https://github.com/randovania/dread-editor/pull/226",
+      "author": "dependabot[bot]",
+      "labels": [
+        "dependencies",
+        "github_actions"
+      ],
+      "created_at": "2024-02-21T23:23:15+00:00",
+      "updated_at": "2024-02-21T23:23:16+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": []
+    },
+    {
+      "repo": "dread-editor",
+      "number": 225,
+      "title": "Add functionality for rendering AABox, Circle, and OBox logic shape types and fix crash when changing logic shape type",
+      "url": "https://github.com/randovania/dread-editor/pull/225",
+      "author": "MayberryZoom",
+      "labels": [],
+      "created_at": "2024-02-02T07:34:58+00:00",
+      "updated_at": "2024-02-02T07:34:58+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": []
+    },
+    {
+      "repo": "dread-editor",
+      "number": 223,
+      "title": "Bump altgraph from 0.17.3 to 0.17.4",
+      "url": "https://github.com/randovania/dread-editor/pull/223",
+      "author": "dependabot[bot]",
+      "labels": [
+        "dependencies",
+        "python"
+      ],
+      "created_at": "2023-12-19T23:02:22+00:00",
+      "updated_at": "2023-12-19T23:02:23+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": []
+    },
+    {
+      "repo": "dread-editor",
+      "number": 222,
+      "title": "Bump construct from 2.10.68 to 2.10.70",
+      "url": "https://github.com/randovania/dread-editor/pull/222",
+      "author": "dependabot[bot]",
+      "labels": [
+        "dependencies",
+        "python"
+      ],
+      "created_at": "2023-12-19T23:02:17+00:00",
+      "updated_at": "2023-12-19T23:02:18+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": []
+    },
+    {
+      "repo": "dread-editor",
+      "number": 197,
+      "title": "Bump pyopengl from 3.1.6 to 3.1.7",
+      "url": "https://github.com/randovania/dread-editor/pull/197",
+      "author": "dependabot[bot]",
+      "labels": [
+        "dependencies",
+        "python"
+      ],
+      "created_at": "2023-05-23T23:59:05+00:00",
+      "updated_at": "2023-06-28T11:38:01+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": []
+    },
+    {
+      "repo": "dread-editor",
+      "number": 187,
+      "title": "Bump imgui from 1.4.1 to 2.0.0",
+      "url": "https://github.com/randovania/dread-editor/pull/187",
+      "author": "dependabot[bot]",
+      "labels": [
+        "dependencies",
+        "python"
+      ],
+      "created_at": "2023-04-19T23:58:34+00:00",
+      "updated_at": "2023-06-20T06:44:02+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": []
+    },
+    {
+      "repo": "open-dread-rando",
+      "number": 434,
+      "title": "[pre-commit.ci] pre-commit autoupdate",
+      "url": "https://github.com/randovania/open-dread-rando/pull/434",
+      "author": "pre-commit-ci[bot]",
+      "labels": [],
+      "created_at": "2026-05-18T22:12:18+00:00",
+      "updated_at": "2026-06-01T23:10:24+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": []
+    },
+    {
+      "repo": "open-samus-returns-rando",
+      "number": 598,
+      "title": "[pre-commit.ci] pre-commit autoupdate",
+      "url": "https://github.com/randovania/open-samus-returns-rando/pull/598",
+      "author": "pre-commit-ci[bot]",
+      "labels": [],
+      "created_at": "2026-06-01T22:22:21+00:00",
+      "updated_at": "2026-06-01T22:22:21+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": []
+    },
+    {
+      "repo": "YAMS",
+      "number": 270,
+      "title": "Bump SixLabors.ImageSharp from 3.1.12 to 4.0.0",
+      "url": "https://github.com/randovania/YAMS/pull/270",
+      "author": "dependabot[bot]",
+      "labels": [
+        "dependencies"
+      ],
+      "created_at": "2026-05-12T19:50:51+00:00",
+      "updated_at": "2026-05-12T19:50:53+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": []
+    },
+    {
+      "repo": "YAMS",
+      "number": 265,
+      "title": "Bump actions/upload-artifact from 6 to 7",
+      "url": "https://github.com/randovania/YAMS/pull/265",
+      "author": "dependabot[bot]",
+      "labels": [
+        "dependencies",
+        "github_actions"
+      ],
+      "created_at": "2026-02-27T13:53:10+00:00",
+      "updated_at": "2026-04-09T13:56:07+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": []
+    },
+    {
+      "repo": "randovania-scm-version-schema",
+      "number": 86,
+      "title": "Use `rc` for builds on the stable branch.",
+      "url": "https://github.com/randovania/randovania-scm-version-schema/pull/86",
+      "author": "henriquegemignani",
+      "labels": [],
+      "created_at": "2025-11-15T23:43:11+00:00",
+      "updated_at": "2025-11-16T14:08:10+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "Miepee",
+          "state": "APPROVED",
+          "submitted_at": "2025-11-16T07:42:55+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "factorio-randovania-mod",
+      "number": 95,
+      "title": "remove rocket silo freebies",
+      "url": "https://github.com/randovania/factorio-randovania-mod/pull/95",
+      "author": "JeffGainsNGames",
+      "labels": [],
+      "created_at": "2025-12-09T19:01:57+00:00",
+      "updated_at": "2026-01-26T15:45:06+00:00",
+      "requested_reviewers": [
+        "duncathan"
+      ],
+      "requested_teams": [],
+      "reviews": [
+        {
+          "reviewer": "henriquegemignani",
+          "state": "CHANGES_REQUESTED",
+          "submitted_at": "2026-01-26T15:45:06+00:00"
+        }
+      ]
+    },
+    {
+      "repo": "factorio-assets-mod",
+      "number": 15,
+      "title": "Bump actions/download-artifact from 7 to 8",
+      "url": "https://github.com/randovania/factorio-assets-mod/pull/15",
+      "author": "dependabot[bot]",
+      "labels": [
+        "dependencies",
+        "github_actions"
+      ],
+      "created_at": "2026-02-27T11:05:39+00:00",
+      "updated_at": "2026-04-13T11:49:32+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": []
+    },
+    {
+      "repo": "construct-extensions",
+      "number": 10,
+      "title": "Bump actions/upload-artifact from 4 to 7",
+      "url": "https://github.com/randovania/construct-extensions/pull/10",
+      "author": "dependabot[bot]",
+      "labels": [
+        "dependencies",
+        "github_actions"
+      ],
+      "created_at": "2026-02-27T14:24:29+00:00",
+      "updated_at": "2026-02-27T14:24:30+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": []
+    },
+    {
+      "repo": "open-prime-rando-practice-mod",
+      "number": 3,
+      "title": "Bump actions/download-artifact from 7 to 8",
+      "url": "https://github.com/randovania/open-prime-rando-practice-mod/pull/3",
+      "author": "dependabot[bot]",
+      "labels": [
+        "dependencies",
+        "github_actions"
+      ],
+      "created_at": "2026-02-26T22:55:24+00:00",
+      "updated_at": "2026-05-13T19:35:30+00:00",
+      "requested_reviewers": [],
+      "requested_teams": [],
+      "reviews": []
+    }
+  ]
+}

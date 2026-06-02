@@ -1,0 +1,69 @@
+[github]
+org = "randovania"
+
+# Repositories to skip entirely (e.g. mirrors, inactive forks kept for reference).
+skip_repos = [
+    "dread-editor",
+    "Super-Duper-Metroid",
+]
+
+# PR authors treated as dependency bots; their PRs are grouped under "Dependency updates".
+# Defaults are used if this key is absent.
+dependency_authors = [
+    "dependabot[bot]",
+    "renovate[bot]",
+    "pre-commit-ci[bot]",
+]
+
+# Discord webhook URLs per named channel.
+# Set each to the full webhook URL for that Discord channel.
+[discord.channels]
+default = ""
+# randovania = "https://discord.com/api/webhooks/..."
+# cave-story  = "https://discord.com/api/webhooks/..."
+
+# Map repository name → channel name (from discord.channels above).
+# PRs in repos not listed here go to the "default" channel.
+[repo_channels]
+
+construct-extensions            = "library-dev"
+# digital-ocean-app
+# docker-devkitpro-nintendont
+factorio-assets-mod             = "factorio-dev"
+factorio-randovania-mod         = "factorio-dev"
+mercury-engine-data-structures  = "library-dev"
+mercury-modding-wiki            = "library-dev"
+msr-remote-connector            = "samus-returns-dev"
+# Nintendont
+open-dread-rando                = "metroid-dread-dev"
+open-dread-rando-exlaunch       = "metroid-dread-dev"
+open-prime-hunters-rando        = "mp-hunters-dev"
+open-prime-rando                = "mp2-echoes-dev"
+open-prime-rando-practice-mod   = "mp2-echoes-dev"
+open-samus-returns-rando        = "samus-returns-dev"
+# py-dolphin-memory-engine
+py-randomprime                  = "metroid-prime-dev"
+randomprime                     = "metroid-prime-dev"
+# randovania
+randovania-lupa                 = "library-dev"
+# randovania-scm-version-schema
+# randovania.github.io
+retro-data-structures           = "library-dev"
+# server-portainer
+# server-traefik
+# terraform
+YAMS                            = "am2r-dev"
+
+# Map PR label → channel name.  Label mapping takes priority over repo mapping.
+[label_channels]
+"game: AM2R"                    = "am2r-dev"
+"game: Cave Story"              = "cave-story-dev"
+"game: Factorio"                = "factorio-dev"
+"game: Metroid Dread"           = "metroid-dread-dev"
+"game: Metroid Fusion"          = "metroid-fusion-dev"
+"game: Metroid Prime 1"         = "metroid-prime-dev"
+"game: Metroid Prime 2 Echoes"  = "mp2-echoes-dev"
+# "game: Metroid Prime 3 Corruption"         = "mp3-corruption-dev"
+"game: Metroid Prime Hunters"   = "mp-hunters-dev"
+"game: Metroid Zero Mission"    = "metroid-zero-mission-dev"
+"game: Metroid: Samus Returns"  = "samus-returns-dev"

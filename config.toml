@@ -67,3 +67,8 @@ YAMS                            = "am2r-dev"
 "game: Metroid Prime Hunters"   = "mp-hunters-dev"
 "game: Metroid Zero Mission"    = "metroid-zero-mission-dev"
 "game: Metroid: Samus Returns"  = "samus-returns-dev"
+
+# Map GitHub username → Discord user ID (numeric).
+# When present, "changes requested" lines mention the author directly.
+# Example: "octocat" = "123456789012345678"
+[user_map]

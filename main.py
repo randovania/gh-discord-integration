@@ -183,13 +183,26 @@ def _age_str(days: int) -> str:
     return f"inactive {days}d"
 
 
-def _pr_line(pr: dict) -> str:
+def _format_user(github_login: str, user_map: dict[str, str]) -> str:
+    discord_id = user_map.get(github_login)
+    if discord_id:
+        return f"<@{discord_id}>"
+    return f"@{github_login}"
+
+
+def _pr_line(pr: dict, user_map: dict[str, str], *, show_author: bool = False) -> str:
     age = _age_str(pr["age_days"])
-    return f"• [{pr['repo']}#{pr['number']}](<{pr['url']}>) **{pr['title']}** — {age}"
+    base = f"• [{pr['repo']}#{pr['number']}](<{pr['url']}>) **{pr['title']}**"
+    if show_author:
+        author = _format_user(pr["author"], user_map)
+        return f"{base} — {author} — {age}"
+    return f"{base} — {age}"
 
 
 def build_reports(prs: list[dict], config: dict, dependency_authors: set[str]) -> dict[str, str]:
     """Return a mapping of channel_name → formatted Discord message content."""
+    user_map: dict[str, str] = config.get("user_map", {})
+
     # Group classified PRs by channel, then by attention category.
     channel_buckets: dict[str, dict[str, list[dict]]] = defaultdict(lambda: defaultdict(list))
 
@@ -214,14 +227,15 @@ def build_reports(prs: list[dict], config: dict, dependency_authors: set[str]) -
                 continue
             heading = f"{_ATTENTION_EMOJI[att]} **{_ATTENTION_HEADING[att]}**"
             lines = [heading]
+            show_author = att == "changes_requested"
             for pr in sorted(buckets[att], key=lambda p: p["age_days"], reverse=True):
-                lines.append(_pr_line(pr))
+                lines.append(_pr_line(pr, user_map, show_author=show_author))
             sections.append("\n".join(lines))
 
         if "_other" in buckets:
             lines = ["📌 **Other open PRs**"]
             for pr in sorted(buckets["_other"], key=lambda p: p["age_days"], reverse=True):
-                lines.append(_pr_line(pr))
+                lines.append(_pr_line(pr, user_map))
             sections.append("\n".join(lines))
 
         reports[channel] = "\n\n".join(sections)

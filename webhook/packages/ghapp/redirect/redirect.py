@@ -247,11 +247,3 @@ def main(args: dict) -> dict:
         return process(args)
     except Exception as e:
         return {"body": "".join(traceback.format_exception(e))}
-
-if __name__ == "__main__":
-    import json
-    import sys
-
-    args = json.load(sys.stdin)
-    result = process(args)
-    print(json.dumps(result, indent=2))

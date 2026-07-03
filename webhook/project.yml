@@ -9,11 +9,26 @@ packages:
     functions:
       - name: redirect
         binary: false
-        main: "main"
-        runtime: python:3.13
+        main: ""
+        runtime: python:3.11
         web: true
         parameters: {}
         environment:
+          WEBHOOK_AM2R_DEV: "${WEBHOOK_AM2R_DEV}"
+          WEBHOOK_CORRUPTION_DEV: "${WEBHOOK_CORRUPTION_DEV}"
+          WEBHOOK_DREAD_DEV: "${WEBHOOK_DREAD_DEV}"
+          WEBHOOK_FUSION_DEV: "${WEBHOOK_FUSION_DEV}"
+          WEBHOOK_LIBRARY_DEV: "${WEBHOOK_LIBRARY_DEV}"
+          WEBHOOK_PLANETS_DEV: "${WEBHOOK_PLANETS_DEV}"
+          WEBHOOK_ECHOES_DEV: "${WEBHOOK_ECHOES_DEV}"
+          WEBHOOK_SUPER_METROID_DEV: "${WEBHOOK_SUPER_METROID_DEV}"
+          WEBHOOK_PRIME_DEV: "${WEBHOOK_PRIME_DEV}"
+          WEBHOOK_RANDOVANIA_DEV: "${WEBHOOK_RANDOVANIA_DEV}"
+          WEBHOOK_SAMUS_RETURNS_DEV: "${WEBHOOK_SAMUS_RETURNS_DEV}"
+          WEBHOOK_CAVE_STORY_DEV: "${WEBHOOK_CAVE_STORY_DEV}"
+          WEBHOOK_FACTORIO_DEV: "${WEBHOOK_FACTORIO_DEV}"
+          WEBHOOK_MP_HUNTERS_DEV: "${WEBHOOK_MP_HUNTERS_DEV}"
+          WEBHOOK_ZERO_MISSION_DEV: "${WEBHOOK_ZERO_MISSION_DEV}"
           DISCORD_TOKEN: "${DISCORD_TOKEN}"
         annotations: {}
         limits: {}

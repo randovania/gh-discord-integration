@@ -91,7 +91,7 @@ def process(args: dict[str, str]) -> dict:
     if "sender" in args:
         if args["sender"].get("login") in ignored_users:
             print("ignored user")
-            return {"body": "ignored user"}
+            return {"body": "ignored user" + f" {os.listdir('.')} -- {os.getcwd()}"}
 
     repository = args["repository"]["name"]
 

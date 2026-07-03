@@ -9,8 +9,8 @@ packages:
     functions:
       - name: redirect
         binary: false
-        main: ""
-        runtime: python:3.11
+        main: "main"
+        runtime: python:3.13
         web: true
         parameters: {}
         environment:

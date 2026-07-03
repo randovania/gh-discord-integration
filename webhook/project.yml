@@ -15,5 +15,6 @@ packages:
         parameters: {}
         environment:
           DISCORD_TOKEN: "${DISCORD_TOKEN}"
+          LOG_DESTINATIONS: "${LOG_DESTINATIONS}"
         annotations: {}
         limits: {}

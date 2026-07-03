@@ -1,0 +1,27 @@
+{
+  "http": {
+    "headers": {
+      "x-github-event": "pull_request_review"
+    }
+  },
+  "action": "submitted",
+  "review": {
+    "state": "approved",
+    "html_url": "https://github.com/randovania/test-repo/pull/42#pullrequestreview-123",
+    "body": "Looks good to me!"
+  },
+  "pull_request": {
+    "number": 42,
+    "title": "Add cool feature",
+    "html_url": "https://github.com/randovania/test-repo/pull/42",
+    "labels": []
+  },
+  "repository": {
+    "name": "test-repo",
+    "html_url": "https://github.com/randovania/test-repo"
+  },
+  "sender": {
+    "login": "reviewer1",
+    "avatar_url": "https://avatars.githubusercontent.com/u/1?v=4"
+  }
+}

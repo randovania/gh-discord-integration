@@ -1,0 +1,24 @@
+{
+  "http": {
+    "headers": {
+      "x-github-event": "pull_request"
+    }
+  },
+  "action": "closed",
+  "pull_request": {
+    "number": 43,
+    "title": "Fix the bug",
+    "html_url": "https://github.com/randovania/test-repo/pull/43",
+    "body": "Fixes issue #10.",
+    "merged": true,
+    "labels": []
+  },
+  "repository": {
+    "name": "test-repo",
+    "html_url": "https://github.com/randovania/test-repo"
+  },
+  "sender": {
+    "login": "octocat",
+    "avatar_url": "https://avatars.githubusercontent.com/u/583231?v=4"
+  }
+}

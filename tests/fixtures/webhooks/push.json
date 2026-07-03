@@ -1,0 +1,24 @@
+{
+  "http": {
+    "headers": {
+      "x-github-event": "push"
+    }
+  },
+  "ref": "refs/heads/main",
+  "compare": "https://github.com/randovania/test-repo/compare/abc123...def456",
+  "commits": [
+    {
+      "id": "def456abcdef1234",
+      "message": "Fix typo in README",
+      "url": "https://github.com/randovania/test-repo/commit/def456abcdef1234"
+    }
+  ],
+  "repository": {
+    "name": "test-repo",
+    "html_url": "https://github.com/randovania/test-repo"
+  },
+  "sender": {
+    "login": "octocat",
+    "avatar_url": "https://avatars.githubusercontent.com/u/583231?v=4"
+  }
+}

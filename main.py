@@ -282,7 +282,7 @@ def main() -> None:
     dry_run = "--dry-run" in args
     refresh = "--refresh" in args
 
-    config_path = Path("config.toml")
+    config_path = Path(__file__).parent / "webhook" / "config.toml"
     if not config_path.exists():
         print("config.toml not found.", file=sys.stderr)
         sys.exit(1)

@@ -1,0 +1,16 @@
+alerts:
+- rule: DEPLOYMENT_FAILED
+- rule: DOMAIN_FAILED
+
+functions:
+- name: discord-notifications
+  github:
+    branch: main
+    deploy_on_push: true
+    repo: randovania/pr-health-report
+
+  routes:
+  - path: /
+  source_dir: /webhook
+
+name: discord

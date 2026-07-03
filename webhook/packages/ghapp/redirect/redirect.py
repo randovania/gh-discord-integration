@@ -3,8 +3,6 @@ import tomllib
 import traceback
 from pathlib import Path
 
-import httpx
-
 DISCORD_API = "https://discord.com/api/v10"
 
 _ignored_users = {
@@ -44,6 +42,7 @@ def _resolve_channel(repository: str, labels: list[str], config: dict) -> str:
 
 
 def _post_to_discord(channel_id: str, payload: dict) -> str:
+    import httpx
     token = os.environ["DISCORD_TOKEN"]
     url = f"{DISCORD_API}/channels/{channel_id}/messages"
     with httpx.Client(headers={"Authorization": f"Bot {token}"}) as client:

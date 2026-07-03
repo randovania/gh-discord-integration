@@ -1,249 +1,135 @@
+import json
+import logging
 import os
-import tomllib
 import traceback
-from pathlib import Path
+import requests
 
-DISCORD_API = "https://discord.com/api/v10"
+def get_labels(issue):
+    return [
+        label["name"]
+        for label in issue["labels"]
+    ]
 
-_ignored_users = {
+
+_channel_for_label = {
+    "game: AM2R": "am2r-dev",
+    "game: Cave Story": "cave-story-dev",
+    "game: Metroid Dread": "dread-dev",
+    "game: Factorio": "factorio-dev",
+    "game: Metroid Fusion": "fusion-dev",
+    "game: Metroid Planets": "planets-dev",
+    "game: Metroid Prime 1": "prime-dev",
+    "game: Metroid Prime 2 Echoes": "echoes-dev",
+    "game: Metroid Prime 3 Corruption": "corruption-dev",
+    "game: Metroid Prime Hunters": "mp-hunters-dev",
+    "game: Metroid: Samus Returns": "samus-returns-dev",
+    "game: Metroid Zero Mission": "zero-mission-dev",
+    "game: Super Metroid": "super-metroid-dev",
+}
+
+_channel_for_repository = {
+    "YAMS": "am2r-dev",
+    
+    "factorio-assets-mod": "factorio-dev",
+    "factorio-randovania-mod": "factorio-dev",
+    
+    "py-dolphin-memory-engine": "library-dev",
+    "retro-data-structures": "library-dev",
+    "randomprime": "prime-dev",
+    "py-randomprime": "prime-dev",
+    "open-prime-rando": "echoes-dev",
+    "open-prime-rando-practice-mod": "echoes-dev",
+
+    "open-prime-hunters-rando": "mp-hunters-dev",
+    
+    "mercury-engine-data-structures": "library-dev",
+    "msr-remote-connector": "samus-returns-dev",
+    "open-samus-returns-rando": "samus-returns-dev",
+    "open-dread-rando": "dread-dev",
+    "open-dread-rando-exlaunch": "dread-dev",
+    
+    "Super-Duper-Metroid": "super-metroid-dev",
+}
+
+_ignored_repositories = {}
+
+ignored_users = {
     "codecov[bot]",
     "dependabot[bot]",
     "pre-commit-ci[bot]",
     "renovate[bot]",
 }
 
-# Colors matching Discord's GitHub integration
-_COLOR_GREEN = 0x2ECC71   # opened / created
-_COLOR_RED = 0xCB2431     # closed / deleted
-_COLOR_PURPLE = 0x6F42C1  # merged
-_COLOR_GRAY = 0x24292E    # push
-_COLOR_BLUE = 0x0075CA    # comment / review
+def _send_to_discord(channel: str, body: dict):
+    channel_enviroify = channel.upper().replace("-", "_")
+    webhook = os.environ[f"WEBHOOK_{channel_enviroify}"]
+    url = f"{webhook}/github"
 
+    print(">> WILL POST TO", url)
+    logging.info("post to: %s", url)
 
-def _load_config() -> dict:
-    # Walk up from this file's directory until config.toml is found.
-    # In the DO container the deployed root is a few levels up from the function dir.
-    here = Path(__file__).resolve().parent
-    for directory in [here, *here.parents]:
-        candidate = directory / "config.toml"
-        if candidate.exists():
-            with open(candidate, "rb") as f:
-                return tomllib.load(f)
-    raise FileNotFoundError("config.toml not found")
+    r = requests.post(
+        url,
+        json=body,
+        headers={
+            "x-github-event": body["http"]["headers"]["x-github-event"]
+        }
+    )
+    r.raise_for_status()
+    logging.info("response: %s", str(r))
+    return f"Posted to webhook: {r.text}" 
+    
 
-
-def _resolve_channel(repository: str, labels: list[str], config: dict) -> str:
-    label_channels: dict[str, str] = config.get("label_channels", {})
-    repo_channels: dict[str, str] = config.get("repo_channels", {})
-    for label in labels:
-        if label in label_channels:
-            return label_channels[label]
-    return repo_channels.get(repository, "default")
-
-
-def _post_to_discord(channel_id: str, payload: dict) -> str:
-    import httpx
-    token = os.environ["DISCORD_TOKEN"]
-    url = f"{DISCORD_API}/channels/{channel_id}/messages"
-    with httpx.Client(headers={"Authorization": f"Bot {token}"}) as client:
-        resp = client.post(url, json=payload)
-        resp.raise_for_status()
-        return f"Posted to channel {channel_id}: {resp.status_code}"
-
-
-def _author(args: dict) -> dict:
-    sender = args.get("sender", {})
-    login = sender.get("login", "?")
-    return {
-        "name": login,
-        "url": f"https://github.com/{login}",
-        "icon_url": sender.get("avatar_url", ""),
-    }
-
-
-def _embed(color: int, title: str, url: str, description: str, args: dict) -> dict:
-    e: dict = {"color": color, "author": _author(args), "title": title, "url": url}
-    if description:
-        e["description"] = description[:2048]
-    return e
-
-
-def _build_message(event: str, args: dict) -> dict:
-    repo = args.get("repository", {}).get("name", "?")
-
-    if event == "push":
-        ref = args.get("ref", "?").removeprefix("refs/heads/")
-        commits = args.get("commits", [])
-        n = len(commits)
-        compare_url = args.get("compare", args.get("repository", {}).get("html_url", ""))
-        lines = []
-        for c in commits[-10:]:
-            sha = c.get("id", "")[:7]
-            msg = c.get("message", "").splitlines()[0]
-            c_url = c.get("url", "")
-            lines.append(f"[`{sha}`]({c_url}) {msg}")
-        noun = "commit" if n == 1 else "commits"
-        return {"embeds": [_embed(
-            _COLOR_GRAY,
-            f"[{repo}:{ref}] {n} new {noun}",
-            compare_url,
-            "\n".join(lines),
-            args,
-        )]}
-
-    if event == "pull_request":
-        action = args.get("action", "?")
-        pr = args.get("pull_request", {})
-        n = pr.get("number", "?")
-        title = pr.get("title", "?")
-        url = pr.get("html_url", "")
-        body = (pr.get("body") or "")[:300]
-        merged = pr.get("merged", False)
-        if action == "closed":
-            verb, color = ("merged", _COLOR_PURPLE) if merged else ("closed", _COLOR_RED)
-        elif action in ("opened", "reopened"):
-            verb, color = action, _COLOR_GREEN
-        else:
-            verb, color = action, _COLOR_BLUE
-        return {"embeds": [_embed(color, f"[{repo}] Pull request {verb}: #{n} {title}", url, body, args)]}
-
-    if event == "pull_request_review":
-        action = args.get("action", "?")
-        if action != "submitted":
-            return {}
-        review = args.get("review", {})
-        pr = args.get("pull_request", {})
-        n = pr.get("number", "?")
-        pr_title = pr.get("title", "?")
-        state = review.get("state", "?").replace("_", " ").lower()
-        url = review.get("html_url") or pr.get("html_url", "")
-        body = (review.get("body") or "")[:300]
-        color = _COLOR_GREEN if state == "approved" else (_COLOR_RED if state == "changes requested" else _COLOR_BLUE)
-        return {"embeds": [_embed(color, f"[{repo}] Pull request review {state}: #{n} {pr_title}", url, body, args)]}
-
-    if event == "pull_request_review_comment":
-        action = args.get("action", "?")
-        if action != "created":
-            return {}
-        comment = args.get("comment", {})
-        pr = args.get("pull_request", {})
-        n = pr.get("number", "?")
-        pr_title = pr.get("title", "?")
-        url = comment.get("html_url", pr.get("html_url", ""))
-        body = (comment.get("body") or "")[:300]
-        return {"embeds": [_embed(_COLOR_BLUE, f"[{repo}] New review comment on pull request #{n}: {pr_title}", url, body, args)]}
-
-    if event == "issues":
-        action = args.get("action", "?")
-        issue = args.get("issue", {})
-        n = issue.get("number", "?")
-        title = issue.get("title", "?")
-        url = issue.get("html_url", "")
-        body = (issue.get("body") or "")[:300]
-        color = _COLOR_GREEN if action == "opened" else (_COLOR_RED if action == "closed" else _COLOR_BLUE)
-        return {"embeds": [_embed(color, f"[{repo}] Issue {action}: #{n} {title}", url, body, args)]}
-
-    if event == "issue_comment":
-        action = args.get("action", "?")
-        if action != "created":
-            return {}
-        issue = args.get("issue", {})
-        comment = args.get("comment", {})
-        n = issue.get("number", "?")
-        title = issue.get("title", "?")
-        url = comment.get("html_url", issue.get("html_url", ""))
-        body = (comment.get("body") or "")[:300]
-        kind = "pull request" if "pull_request" in issue else "issue"
-        return {"embeds": [_embed(_COLOR_BLUE, f"[{repo}] New comment on {kind} #{n}: {title}", url, body, args)]}
-
-    if event == "create":
-        ref_type = args.get("ref_type", "?")
-        ref = args.get("ref", "?")
-        url = args.get("repository", {}).get("html_url", "")
-        return {"embeds": [_embed(_COLOR_GREEN, f"[{repo}] New {ref_type} created: {ref}", url, "", args)]}
-
-    if event == "delete":
-        ref_type = args.get("ref_type", "?")
-        ref = args.get("ref", "?")
-        url = args.get("repository", {}).get("html_url", "")
-        return {"embeds": [_embed(_COLOR_RED, f"[{repo}] {ref_type.capitalize()} deleted: {ref}", url, "", args)]}
-
-    if event == "release":
-        action = args.get("action", "?")
-        if action != "published":
-            return {}
-        release = args.get("release", {})
-        tag = release.get("tag_name", "?")
-        name = release.get("name") or tag
-        url = release.get("html_url", "")
-        body = (release.get("body") or "")[:300]
-        return {"embeds": [_embed(_COLOR_GREEN, f"[{repo}] New release published: {name}", url, body, args)]}
-
-    if event == "commit_comment":
-        action = args.get("action", "?")
-        if action != "created":
-            return {}
-        comment = args.get("comment", {})
-        url = comment.get("html_url", "")
-        body = (comment.get("body") or "")[:300]
-        sha = comment.get("commit_id", "")[:7]
-        return {"embeds": [_embed(_COLOR_BLUE, f"[{repo}] New comment on commit [`{sha}`]({url})", url, body, args)]}
-
-    if event == "fork":
-        forkee = args.get("forkee", {})
-        url = forkee.get("html_url", "")
-        full_name = forkee.get("full_name", "?")
-        return {"embeds": [_embed(_COLOR_GREEN, f"[{repo}] Fork created: {full_name}", url, "", args)]}
-
-    if event == "watch":
-        url = args.get("repository", {}).get("html_url", "")
-        return {"embeds": [_embed(_COLOR_GRAY, f"[{repo}] New star", url, "", args)]}
-
-    # Unhandled event — skip silently
-    return {}
-
-
-def process(args: dict) -> dict:
-    event = args.get("http", {}).get("headers", {}).get("x-github-event", "unknown")
-    print(f"Received event: {event}")
+def process(args: dict[str, str]) -> dict:
+    event = args["http"]["headers"]["x-github-event"]
+    print(f"Received new event: {event}")
 
     if "repository" not in args:
+        print("unsupported request")
         return {"body": "unsupported request"}
 
-    sender_login = args.get("sender", {}).get("login", "")
-    if sender_login in _ignored_users:
-        return {"body": "ignored user"}
+    if "sender" in args:
+        if args["sender"].get("login") in ignored_users:
+            print("ignored user")
+            return {"body": "ignored user"}
+
+    repository = args["repository"]["name"]
 
     issue = args.get("issue") or args.get("pull_request")
     if issue:
-        if issue.get("user", {}).get("login") in _ignored_users:
-            return {"body": "ignored user"}
-        labels = [lbl["name"] for lbl in issue.get("labels", [])]
+        if "user" in issue:
+            if issue["user"].get("login") in ignored_users:
+                print("ignored user")
+                return {"body": "ignored user"}
+
+        labels = get_labels(issue)
     else:
         labels = []
 
-    payload = _build_message(event, args)
-    if not payload:
-        return {"body": f"event '{event}' produces no message — skipped"}
+    channels = [_channel_for_label.get(label) for label in labels]
+    channels = [c for c in channels if c is not None]
 
-    config = _load_config()
-    channels_config: dict[str, str] = config.get("discord", {}).get("channels", {})
+    if len(channels) == 1:
+        channel_name = channels[0]
+    elif repository in _channel_for_repository:
+        channel_name = _channel_for_repository[repository]
+    elif repository in _ignored_repositories:
+        return {"body": "ignored repository"}
+    else:
+        channel_name = "randovania-dev"
+    
+    print(f"Event for repository {repository} and channel {channel_name}")
+    # return {"body": f"Event for repository {repository} and channel {channel_name}"}
 
-    repository = args["repository"]["name"]
-    channel_name = _resolve_channel(repository, labels, config)
-    channel_id = channels_config.get(channel_name) or channels_config.get("default", "")
-
-    if not channel_id:
-        return {"body": f"no channel ID configured for '{channel_name}' or 'default'"}
-
-    print(f"Routing {event} from {repository} to channel {channel_name} ({channel_id})")
-
-    result = _post_to_discord(channel_id, payload)
+    result = _send_to_discord(channel_name, args)
+    # print(result)
     return {"body": result}
 
 
-def main(args: dict, context: dict) -> dict:
+def main(args: dict[str, str]):
     try:
         return process(args)
     except Exception as e:
-        return {"body": "".join(traceback.format_exception(e))}
+        return {
+            "body": traceback.format_exception(e)
+        }

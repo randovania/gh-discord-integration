@@ -242,7 +242,7 @@ def process(args: dict) -> dict:
     return {"body": result}
 
 
-def main(args: dict) -> dict:
+def main(args: dict, context: dict) -> dict:
     try:
         return process(args)
     except Exception as e:

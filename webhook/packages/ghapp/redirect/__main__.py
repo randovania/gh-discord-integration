@@ -28,11 +28,9 @@ def _load_config() -> dict:
         candidates.insert(0, Path(__file__).resolve().parent / "config.toml")
     for candidate in candidates:
         if candidate.exists():
-            with open(candidate, "rb") as f:
-                return tomllib.load(f)
-    raise FileNotFoundError(
-        f"config.toml not found in {[str(c) for c in candidates]}; cwd contains {os.listdir('.')}"
-    )
+            return tomllib.loads(candidate.read_text(encoding="utf-8"))
+    cwd_files = [p.name for p in Path.cwd().iterdir()]
+    raise FileNotFoundError(f"config.toml not found in {[str(c) for c in candidates]}; cwd contains {cwd_files}")
 
 
 def _resolve_channel(repository: str, labels: list[str], config: dict) -> str:
@@ -50,9 +48,7 @@ def _post_to_discord(channel_id: str, payload: dict) -> str:
 
     token = os.environ["DISCORD_TOKEN"]
     url = f"{DISCORD_API}/channels/{channel_id}/messages"
-    resp = requests.post(
-        url, json=payload, headers={"Authorization": f"Bot {token}"}, timeout=10
-    )
+    resp = requests.post(url, json=payload, headers={"Authorization": f"Bot {token}"}, timeout=10)
     resp.raise_for_status()
     return f"Posted to channel {channel_id}: {resp.status_code}"
 
@@ -81,9 +77,7 @@ def _build_message(event: str, args: dict) -> dict:
         ref = args.get("ref", "?").removeprefix("refs/heads/")
         commits = args.get("commits", [])
         n = len(commits)
-        compare_url = args.get(
-            "compare", args.get("repository", {}).get("html_url", "")
-        )
+        compare_url = args.get("compare", args.get("repository", {}).get("html_url", ""))
         lines = []
         for c in commits[-10:]:
             sha = c.get("id", "")[:7]
@@ -112,9 +106,7 @@ def _build_message(event: str, args: dict) -> dict:
         body = (pr.get("body") or "")[:300]
         merged = pr.get("merged", False)
         if action == "closed":
-            verb, color = (
-                ("merged", _COLOR_PURPLE) if merged else ("closed", _COLOR_RED)
-            )
+            verb, color = ("merged", _COLOR_PURPLE) if merged else ("closed", _COLOR_RED)
         elif action in ("opened", "reopened"):
             verb, color = action, _COLOR_GREEN
         else:
@@ -142,11 +134,7 @@ def _build_message(event: str, args: dict) -> dict:
         state = review.get("state", "?").replace("_", " ").lower()
         url = review.get("html_url") or pr.get("html_url", "")
         body = (review.get("body") or "")[:300]
-        color = (
-            _COLOR_GREEN
-            if state == "approved"
-            else (_COLOR_RED if state == "changes requested" else _COLOR_BLUE)
-        )
+        color = _COLOR_GREEN if state == "approved" else (_COLOR_RED if state == "changes requested" else _COLOR_BLUE)
         return {
             "embeds": [
                 _embed(
@@ -188,16 +176,8 @@ def _build_message(event: str, args: dict) -> dict:
         title = issue.get("title", "?")
         url = issue.get("html_url", "")
         body = (issue.get("body") or "")[:300]
-        color = (
-            _COLOR_GREEN
-            if action == "opened"
-            else (_COLOR_RED if action == "closed" else _COLOR_BLUE)
-        )
-        return {
-            "embeds": [
-                _embed(color, f"[{repo}] Issue {action}: #{n} {title}", url, body, args)
-            ]
-        }
+        color = _COLOR_GREEN if action == "opened" else (_COLOR_RED if action == "closed" else _COLOR_BLUE)
+        return {"embeds": [_embed(color, f"[{repo}] Issue {action}: #{n} {title}", url, body, args)]}
 
     if event == "issue_comment":
         action = args.get("action", "?")
@@ -299,13 +279,7 @@ def _build_message(event: str, args: dict) -> dict:
         forkee = args.get("forkee", {})
         url = forkee.get("html_url", "")
         full_name = forkee.get("full_name", "?")
-        return {
-            "embeds": [
-                _embed(
-                    _COLOR_GREEN, f"[{repo}] Fork created: {full_name}", url, "", args
-                )
-            ]
-        }
+        return {"embeds": [_embed(_COLOR_GREEN, f"[{repo}] Fork created: {full_name}", url, "", args)]}
 
     if event == "watch":
         url = args.get("repository", {}).get("html_url", "")

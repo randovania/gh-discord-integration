@@ -1,8 +1,10 @@
+import json
 from datetime import UTC, datetime, timedelta
+from typing import ClassVar
 
 import httpx
 
-import main
+from pr_health_report import main
 
 DISCORD_CHANNEL_ID = "999888777666555444"
 
@@ -42,29 +44,21 @@ class TestClassifyPR:
         assert "awaiting_review" in result["attention"]
 
     def test_changes_requested(self):
-        pr = make_pr(
-            reviews=[
-                {"reviewer": "bob", "state": "CHANGES_REQUESTED", "submitted_at": None}
-            ]
-        )
+        pr = make_pr(reviews=[{"reviewer": "bob", "state": "CHANGES_REQUESTED", "submitted_at": None}])
         result = main.classify_pr(pr, set())
         assert "changes_requested" in result["attention"]
 
     def test_changes_requested_suppresses_awaiting_review(self):
         pr = make_pr(
             requested_reviewers=["carol"],
-            reviews=[
-                {"reviewer": "bob", "state": "CHANGES_REQUESTED", "submitted_at": None}
-            ],
+            reviews=[{"reviewer": "bob", "state": "CHANGES_REQUESTED", "submitted_at": None}],
         )
         result = main.classify_pr(pr, set())
         assert "changes_requested" in result["attention"]
         assert "awaiting_review" not in result["attention"]
 
     def test_ready_to_merge_when_approved_and_no_pending_request(self):
-        pr = make_pr(
-            reviews=[{"reviewer": "bob", "state": "APPROVED", "submitted_at": None}]
-        )
+        pr = make_pr(reviews=[{"reviewer": "bob", "state": "APPROVED", "submitted_at": None}])
         result = main.classify_pr(pr, set())
         assert "ready_to_merge" in result["attention"]
 
@@ -86,9 +80,7 @@ class TestClassifyPR:
         assert result["attention"] == ["dependencies"]
 
     def test_commented_review_does_not_count_as_decisive(self):
-        pr = make_pr(
-            reviews=[{"reviewer": "bob", "state": "COMMENTED", "submitted_at": None}]
-        )
+        pr = make_pr(reviews=[{"reviewer": "bob", "state": "COMMENTED", "submitted_at": None}])
         result = main.classify_pr(pr, set())
         assert "needs_reviewer" not in result["attention"]
         assert "ready_to_merge" not in result["attention"]
@@ -100,7 +92,7 @@ class TestClassifyPR:
 
 
 class TestResolveChannel:
-    CONFIG = {
+    CONFIG: ClassVar[dict] = {
         "label_channels": {"bug": "bugs-channel"},
         "repo_channels": {"special-repo": "special-channel"},
     }
@@ -134,6 +126,12 @@ class TestSplitMessage:
         for chunk in main._split_message(content):
             assert len(chunk) <= 1900
 
+    def test_single_overlong_line_is_cut(self):
+        content = "y" * 4000 + "\nshort\n"
+        chunks = main._split_message(content)
+        assert all(len(chunk) <= 1900 for chunk in chunks)
+        assert "".join(chunks) == content
+
     def test_no_content_lost(self):
         content = "\n".join(f"line {i}" for i in range(200))
         chunks = main._split_message(content)
@@ -149,6 +147,13 @@ class TestPostToChannel:
         )
         with httpx.Client() as client:
             main.post_to_channel(client, DISCORD_CHANNEL_ID, "Hello Discord!")
+
+    def test_mentions_limited_to_users(self, httpx_mock):
+        httpx_mock.add_response(json={"id": "1"}, status_code=200)
+        with httpx.Client() as client:
+            main.post_to_channel(client, DISCORD_CHANNEL_ID, "@everyone look at this")
+        body = json.loads(httpx_mock.get_request().content)
+        assert body["allowed_mentions"] == {"parse": ["users"]}
 
     def test_posts_multiple_chunks_for_long_content(self, httpx_mock):
         url = f"https://discord.com/api/v10/channels/{DISCORD_CHANNEL_ID}/messages"

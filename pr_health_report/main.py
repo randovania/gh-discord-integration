@@ -46,9 +46,7 @@ def _save_cache(prs: list[dict]) -> None:
 def _collapse_reviews(raw_reviews) -> list[dict]:
     """Return the latest meaningful review per reviewer, excluding dismissed/pending."""
     by_reviewer: dict[str, dict] = {}
-    for review in sorted(
-        raw_reviews, key=lambda r: r.submitted_at or datetime.min.replace(tzinfo=UTC)
-    ):
+    for review in sorted(raw_reviews, key=lambda r: r.submitted_at or datetime.min.replace(tzinfo=UTC)):
         if review.state not in ("APPROVED", "CHANGES_REQUESTED", "COMMENTED"):
             continue
         if review.user is None:
@@ -56,9 +54,7 @@ def _collapse_reviews(raw_reviews) -> list[dict]:
         by_reviewer[review.user.login] = {
             "reviewer": review.user.login,
             "state": review.state,
-            "submitted_at": review.submitted_at.isoformat()
-            if review.submitted_at
-            else None,
+            "submitted_at": review.submitted_at.isoformat() if review.submitted_at else None,
         }
     return list(by_reviewer.values())
 
@@ -221,16 +217,12 @@ def _pr_line(pr: dict, user_map: dict[str, str], *, show_author: bool = False) -
     return f"{base} — {age}"
 
 
-def build_reports(
-    prs: list[dict], config: dict, dependency_authors: set[str]
-) -> dict[str, str]:
+def build_reports(prs: list[dict], config: dict, dependency_authors: set[str]) -> dict[str, str]:
     """Return a mapping of channel_name → formatted Discord message content."""
     user_map: dict[str, str] = config.get("user_map", {})
 
     # Group classified PRs by channel, then by attention category.
-    channel_buckets: dict[str, dict[str, list[dict]]] = defaultdict(
-        lambda: defaultdict(list)
-    )
+    channel_buckets: dict[str, dict[str, list[dict]]] = defaultdict(lambda: defaultdict(list))
 
     for pr in prs:
         classified = classify_pr(pr, dependency_authors)
@@ -246,7 +238,7 @@ def build_reports(
     for channel, buckets in channel_buckets.items():
         sections: list[str] = [f"## PR Health Report — {now_str}"]
         total = sum(len(v) for v in buckets.values())
-        sections.append(f"*{total} open PR(s) across the org*\n")
+        sections.append(f"*{total} open PR(s)*\n")
 
         for att in _ATTENTION_ORDER:
             if att not in buckets:
@@ -260,9 +252,7 @@ def build_reports(
 
         if "_other" in buckets:
             lines = ["📌 **Other open PRs**"]
-            for pr in sorted(
-                buckets["_other"], key=lambda p: p["age_days"], reverse=True
-            ):
+            for pr in sorted(buckets["_other"], key=lambda p: p["age_days"], reverse=True):
                 lines.append(_pr_line(pr, user_map))
             sections.append("\n".join(lines))
 
@@ -278,14 +268,21 @@ def build_reports(
 DISCORD_API = "https://discord.com/api/v10"
 
 
+_MAX_CHUNK = 1900  # Discord's hard limit is 2000
+
+
 def _split_message(content: str) -> list[str]:
-    """Split a message into ≤1900-char chunks on line boundaries."""
+    """Split a message into ≤1900-char chunks, on line boundaries where possible."""
     chunks: list[str] = []
     current = ""
     for line in content.splitlines(keepends=True):
-        if len(current) + len(line) > 1900:
+        if len(current) + len(line) > _MAX_CHUNK:
             if current:
                 chunks.append(current)
+            # A single over-long line (e.g. a huge PR title) still has to be cut
+            while len(line) > _MAX_CHUNK:
+                chunks.append(line[:_MAX_CHUNK])
+                line = line[_MAX_CHUNK:]
             current = line
         else:
             current += line
@@ -297,7 +294,8 @@ def _split_message(content: str) -> list[str]:
 def post_to_channel(client: httpx.Client, channel_id: str, content: str) -> None:
     url = f"{DISCORD_API}/channels/{channel_id}/messages"
     for chunk in _split_message(content):
-        resp = client.post(url, json={"content": chunk})
+        # PR titles are user-controlled: never let them ping @everyone/@here or roles
+        resp = client.post(url, json={"content": chunk, "allowed_mentions": {"parse": ["users"]}})
         resp.raise_for_status()
 
 
@@ -312,20 +310,12 @@ def main() -> None:
     refresh = "--refresh" in args
 
     # Shared with the DO function, which can only see files inside its own directory
-    config_path = (
-        Path(__file__).parent
-        / "webhook"
-        / "packages"
-        / "ghapp"
-        / "redirect"
-        / "config.toml"
-    )
+    config_path = Path(__file__).parent.parent / "webhook" / "packages" / "ghapp" / "redirect" / "config.toml"
     if not config_path.exists():
         print("config.toml not found.", file=sys.stderr)
         sys.exit(1)
 
-    with open(config_path, "rb") as f:
-        config = tomllib.load(f)
+    config = tomllib.loads(config_path.read_text(encoding="utf-8"))
 
     gh_token = os.environ.get("GITHUB_TOKEN", "")
     if not gh_token:
@@ -374,9 +364,7 @@ def main() -> None:
                 continue
 
             if not channel_id:
-                print(
-                    f"[{channel_name}] No channel ID configured — skipping. (Use --dry-run to preview.)"
-                )
+                print(f"[{channel_name}] No channel ID configured — skipping. (Use --dry-run to preview.)")
                 continue
 
             print(f"Posting to channel '{channel_name}' ({channel_id})…")
@@ -385,12 +373,8 @@ def main() -> None:
             except Exception as exc:
                 print(f"  Error: {exc}", file=sys.stderr)
                 if channel_name != "default" and default_channel_id:
-                    error_notice = (
-                        f"⚠️ Failed to post PR report to **{channel_name}**: {exc}"
-                    )
-                    print(
-                        f"  Forwarding error to default channel ({default_channel_id})…"
-                    )
+                    error_notice = f"⚠️ Failed to post PR report to **{channel_name}**: {exc}"
+                    print(f"  Forwarding error to default channel ({default_channel_id})…")
                     try:
                         post_to_channel(client, default_channel_id, error_notice)
                     except Exception as inner_exc:

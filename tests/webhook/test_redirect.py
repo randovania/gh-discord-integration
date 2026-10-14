@@ -5,9 +5,7 @@ from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
-REDIRECT_DIR = (
-    Path(__file__).parent.parent.parent / "webhook" / "packages" / "ghapp" / "redirect"
-)
+REDIRECT_DIR = Path(__file__).parent.parent.parent / "webhook" / "packages" / "ghapp" / "redirect"
 
 # DO needs the handler to be called __main__.py, so load it by path under a usable name
 _spec = importlib.util.spec_from_file_location("redirect", REDIRECT_DIR / "__main__.py")
@@ -162,13 +160,8 @@ class TestProcess:
             patch("requests.post", return_value=response) as post,
         ):
             result = redirect.process(args)
-        assert (
-            post.call_args.args[0]
-            == f"https://discord.com/api/v10/channels/{DISCORD_CHANNEL_ID}/messages"
-        )
-        assert post.call_args.kwargs["headers"] == {
-            "Authorization": "Bot test-bot-token"
-        }
+        assert post.call_args.args[0] == f"https://discord.com/api/v10/channels/{DISCORD_CHANNEL_ID}/messages"
+        assert post.call_args.kwargs["headers"] == {"Authorization": "Bot test-bot-token"}
         assert "Posted to channel" in result["body"]
         assert DISCORD_CHANNEL_ID in result["body"]
 

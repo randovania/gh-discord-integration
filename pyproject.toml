@@ -20,3 +20,24 @@ dev = [
 pythonpath = ["."]
 testpaths = ["tests"]
 
+[tool.ruff]
+line-length = 120
+
+[tool.ruff.lint]
+select = [
+    "E", "W",  # pycodestyle
+    "F",       # pyflakes
+    "I",       # isort
+    "UP",      # pyupgrade
+    "B",       # flake8-bugbear
+    "C4",      # flake8-comprehensions
+    "SIM",     # flake8-simplify
+    "PTH",     # flake8-use-pathlib
+    "PT",      # flake8-pytest-style
+    "RUF",     # ruff-specific
+]
+
+[tool.ruff.per-file-target-version]
+# The DO function runs on the python:3.11 runtime, not the project's 3.14
+"webhook/**" = "py311"
+

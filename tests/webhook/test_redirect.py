@@ -151,6 +151,25 @@ class TestProcess:
         assert "Posted to channel" in result["body"]
         assert DISCORD_CHANNEL_ID in result["body"]
 
+    def test_posts_to_every_resolved_channel_once(self, monkeypatch):
+        monkeypatch.setenv("DISCORD_TOKEN", "test-bot-token")
+        config = {
+            "github": {"org": "randovania"},
+            "discord": {"channels": {"default": DISCORD_CHANNEL_ID, "a": "111", "b": "222"}},
+            # 'missing' has no ID so it falls back to default
+            "repo_channels": {"other/test-repo": {"channels": ["a", "b", "missing", "a"]}},
+            "label_channels": {},
+        }
+        args = load_webhook("pull_request_opened.json")
+        args["repository"] = {**args["repository"], "full_name": "other/test-repo", "owner": {"login": "other"}}
+        with (
+            patch("routing.load_config", return_value=config),
+            patch("requests.post", return_value=MagicMock(status_code=200)) as post,
+        ):
+            redirect.process(args)
+        posted = [call.args[0].split("/")[-2] for call in post.call_args_list]
+        assert posted == ["111", "222", DISCORD_CHANNEL_ID]
+
     def test_main_returns_500_on_error(self):
         args = load_webhook("pull_request_opened.json")
         with patch(

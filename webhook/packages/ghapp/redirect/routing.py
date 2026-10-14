@@ -18,26 +18,37 @@ def load_config() -> dict:
     raise FileNotFoundError(f"config.toml not found at {CONFIG_PATH} or in cwd; cwd contains {cwd_files}")
 
 
-def resolve_channel(owner: str, repo: str, labels: list[str], config: dict) -> str | None:
-    """Return the channel name for an event or PR, or None if it should be ignored.
+def resolve_channels(owner: str, repo: str, labels: list[str], config: dict) -> list[str]:
+    """Return the channel names for an event or PR; an empty list means it should be ignored.
 
     Repos outside the configured org are ignored unless [repo_channels] lists them as "owner/repo".
-    Once a repo is routable: a label mapping beats the repo mapping, labels pointing at more than one
-    channel (e.g. several games) go to 'default', and anything unmapped goes to 'default'.
+    A [repo_channels] entry is either a channel name, or a table with `channels` (a list) and optionally
+    its own `label_channels`, which add to the global [label_channels] for that repo only.
+
+    Once a repo is routable, labels pointing at exactly one channel win. Otherwise (no matching labels, or
+    labels for several channels, e.g. several games) it goes to the repo's channels. For a plain channel
+    name entry, labels for several channels go to 'default' instead.
     """
-    label_channels: dict[str, str] = config.get("label_channels", {})
-    repo_channels: dict[str, str] = config.get("repo_channels", {})
+    repo_channels: dict = config.get("repo_channels", {})
     org = config.get("github", {}).get("org", "")
 
-    repo_channel = repo_channels.get(f"{owner}/{repo}")
-    if owner == org:
-        repo_channel = repo_channel or repo_channels.get(repo, "default")
-    elif repo_channel is None:
-        return None
+    entry = repo_channels.get(f"{owner}/{repo}")
+    if entry is None and owner == org:
+        entry = repo_channels.get(repo, "default")
+    if entry is None:
+        return []
+
+    if isinstance(entry, str):
+        fallback = [entry]
+        on_conflict = ["default"]
+        label_channels = config.get("label_channels", {})
+    else:
+        fallback = on_conflict = list(entry["channels"])
+        label_channels = {**config.get("label_channels", {}), **entry.get("label_channels", {})}
 
     matched = {label_channels[label] for label in labels if label in label_channels}
     if len(matched) == 1:
-        return matched.pop()
+        return [matched.pop()]
     if len(matched) > 1:
-        return "default"
-    return repo_channel
+        return on_conflict
+    return fallback

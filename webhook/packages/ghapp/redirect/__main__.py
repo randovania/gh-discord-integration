@@ -310,18 +310,25 @@ def process(args: dict) -> dict:
     repo = args["repository"]
     repository = repo["name"]
     owner = repo.get("owner", {}).get("login") or repo.get("full_name", "").partition("/")[0]
-    channel_name = routing.resolve_channel(owner, repository, labels, config)
-    if channel_name is None:
+    channel_names = routing.resolve_channels(owner, repository, labels, config)
+    if not channel_names:
         return {"body": f"ignored repository {owner}/{repository}"}
-    channel_id = channels_config.get(channel_name) or channels_config.get("default", "")
 
-    if not channel_id:
-        return {"body": f"no channel ID configured for '{channel_name}' or 'default'"}
+    # Unknown channel names fall back to 'default'; dedupe so a channel never gets the same event twice
+    channel_ids: dict[str, str] = {}
+    for channel_name in channel_names:
+        channel_id = channels_config.get(channel_name) or channels_config.get("default", "")
+        if channel_id:
+            channel_ids.setdefault(channel_id, channel_name)
 
-    print(f"Routing {event} from {repository} to channel {channel_name} ({channel_id})")
+    if not channel_ids:
+        return {"body": f"no channel ID configured for {channel_names} or 'default'"}
 
-    result = _post_to_discord(channel_id, payload)
-    return {"body": result}
+    results = []
+    for channel_id, channel_name in channel_ids.items():
+        print(f"Routing {event} from {owner}/{repository} to channel {channel_name} ({channel_id})")
+        results.append(_post_to_discord(channel_id, payload))
+    return {"body": "\n".join(results)}
 
 
 def main(args: dict, context=None) -> dict:

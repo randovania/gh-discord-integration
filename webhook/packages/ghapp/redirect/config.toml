@@ -38,7 +38,13 @@ yoku-dev = "1559975095710126163"
 
 # Map repository name → channel name (from discord.channels above).
 # PRs in repos not listed here go to the "default" channel.
+# Repos outside the [github] org are ignored unless listed here as "owner/repo".
+# An entry can also be a table with a list of `channels` and its own `label_channels`
+# (see MetroidAdvRandomizerSystem/mars-patcher-py below).
 [repo_channels]
+
+"MetroidAdvRandomizerSystem/mars-fusion-asm" = "metroid-fusion-dev"
+"MetroidAdvRandomizerSystem/mars-mzm-decomp" = "metroid-zero-mission-dev"
 
 construct-extensions            = "library-dev"
 # digital-ocean-app
@@ -69,6 +75,11 @@ retro-data-structures           = "library-dev"
 # server-traefik
 # terraform
 YAMS                            = "am2r-dev"
+
+# One game label → that game's channel; neither or both → both channels.
+[repo_channels."MetroidAdvRandomizerSystem/mars-patcher-py"]
+channels = ["metroid-fusion-dev", "metroid-zero-mission-dev"]
+label_channels = { "game: mf" = "metroid-fusion-dev", "game: zm" = "metroid-zero-mission-dev" }
 
 # Map PR label → channel name.  Label mapping takes priority over repo mapping.
 [label_channels]

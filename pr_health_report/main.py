@@ -223,11 +223,11 @@ def build_reports(prs: list[dict], config: dict, dependency_authors: set[str]) -
 
     for pr in prs:
         classified = classify_pr(pr, dependency_authors)
-        channel = routing.resolve_channel(org, classified["repo"], classified["labels"], config)
-        for att in classified["attention"]:
-            channel_buckets[channel][att].append(classified)
-        if not classified["attention"]:
-            channel_buckets[channel]["_other"].append(classified)
+        for channel in routing.resolve_channels(org, classified["repo"], classified["labels"], config):
+            for att in classified["attention"]:
+                channel_buckets[channel][att].append(classified)
+            if not classified["attention"]:
+                channel_buckets[channel]["_other"].append(classified)
 
     now_str = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
     reports: dict[str, str] = {}

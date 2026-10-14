@@ -2,11 +2,30 @@ name: PR Health Report
 
 on:
   schedule:
-    - cron: '0 9 * * 1-5'  # Weekdays at 09:00 UTC
+    - cron: '0 18 * * 1'  # Mondays at 18:00 UTC; the gate below skips every other one
   workflow_dispatch:
 
 jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      run: ${{ steps.check.outputs.run }}
+    steps:
+      - id: check
+        # Cron can't express "every other week", so alternate on weeks since the epoch.
+        # Unlike ISO week numbers, this doesn't produce two runs in a row around 53-week years.
+        # Manual runs always go through.
+        run: |
+          if [ "${{ github.event_name }}" != "schedule" ] || [ $(( $(date -u +%s) / 604800 % 2 )) -eq 1 ]; then
+            echo "run=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Off week, skipping."
+            echo "run=false" >> "$GITHUB_OUTPUT"
+          fi
+
   report:
+    needs: gate
+    if: needs.gate.outputs.run == 'true'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5

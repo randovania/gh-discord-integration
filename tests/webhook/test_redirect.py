@@ -15,6 +15,7 @@ _spec.loader.exec_module(redirect)
 DISCORD_CHANNEL_ID = "111222333444555666"
 
 TEST_CONFIG = {
+    "github": {"org": "randovania"},
     "discord": {"channels": {"default": DISCORD_CHANNEL_ID}},
     "repo_channels": {},
     "label_channels": {},
@@ -134,45 +135,6 @@ class TestBuildMessage:
         assert "octocat" in author["url"]
 
 
-class TestResolveChannel:
-    def test_label_takes_priority_over_repo(self):
-        config = {
-            "label_channels": {"bug": "bugs-channel"},
-            "repo_channels": {"test-repo": "repo-channel"},
-        }
-        result = redirect._resolve_channel("test-repo", ["bug"], config)
-        assert result == "bugs-channel"
-
-    def test_repo_fallback_when_no_label_match(self):
-        config = {
-            "label_channels": {"bug": "bugs-channel"},
-            "repo_channels": {"test-repo": "repo-channel"},
-        }
-        result = redirect._resolve_channel("test-repo", ["enhancement"], config)
-        assert result == "repo-channel"
-
-    def test_default_when_nothing_matches(self):
-        config = {"label_channels": {}, "repo_channels": {}}
-        result = redirect._resolve_channel("unknown-repo", [], config)
-        assert result == "default"
-
-    def test_labels_for_different_channels_go_to_default(self):
-        config = {
-            "label_channels": {"bug": "bugs-channel", "urgent": "urgent-channel"},
-            "repo_channels": {"repo": "repo-channel"},
-        }
-        result = redirect._resolve_channel("repo", ["urgent", "bug"], config)
-        assert result == "default"
-
-    def test_labels_for_same_channel_keep_it(self):
-        config = {
-            "label_channels": {"bug": "bugs-channel", "crash": "bugs-channel"},
-            "repo_channels": {},
-        }
-        result = redirect._resolve_channel("repo", ["crash", "bug"], config)
-        assert result == "bugs-channel"
-
-
 class TestProcess:
     def test_posts_embed_to_discord(self, monkeypatch):
         monkeypatch.setenv("DISCORD_TOKEN", "test-bot-token")
@@ -180,7 +142,7 @@ class TestProcess:
         response.json.return_value = load_discord_response("message_ok.json")
         args = load_webhook("pull_request_opened.json")
         with (
-            patch("redirect._load_config", return_value=TEST_CONFIG),
+            patch("routing.load_config", return_value=TEST_CONFIG),
             patch("requests.post", return_value=response) as post,
         ):
             result = redirect.process(args)
@@ -192,16 +154,24 @@ class TestProcess:
     def test_main_returns_500_on_error(self):
         args = load_webhook("pull_request_opened.json")
         with patch(
-            "redirect._load_config",
+            "routing.load_config",
             side_effect=FileNotFoundError("config.toml not found"),
         ):
             result = redirect.main(args)
         assert result["statusCode"] == 500
         assert "config.toml not found" in result["body"]
 
-    def test_bundled_config_loads(self):
-        config = redirect._load_config()
-        assert config["discord"]["channels"]["default"]
+    def test_ignores_other_org(self, monkeypatch):
+        monkeypatch.setenv("DISCORD_TOKEN", "test-bot-token")
+        args = load_webhook("pull_request_opened.json")
+        args["repository"] = {**args["repository"], "full_name": "someone/test-repo", "owner": {"login": "someone"}}
+        with (
+            patch("routing.load_config", return_value=TEST_CONFIG),
+            patch("requests.post") as post,
+        ):
+            result = redirect.process(args)
+        assert result == {"body": "ignored repository someone/test-repo"}
+        post.assert_not_called()
 
     def test_ignores_bot_sender(self):
         args = {
@@ -235,18 +205,19 @@ class TestProcess:
             **load_webhook("pull_request_opened.json"),
             "http": {"headers": {"x-github-event": "deployment"}},
         }
-        with patch("redirect._load_config", return_value=TEST_CONFIG):
+        with patch("routing.load_config", return_value=TEST_CONFIG):
             result = redirect.process(args)
         assert "skipped" in result["body"]
 
     def test_no_channel_configured_returns_error(self, monkeypatch):
         monkeypatch.setenv("DISCORD_TOKEN", "test-bot-token")
         empty_config = {
+            "github": {"org": "randovania"},
             "discord": {"channels": {}},
             "repo_channels": {},
             "label_channels": {},
         }
         args = load_webhook("pull_request_opened.json")
-        with patch("redirect._load_config", return_value=empty_config):
+        with patch("routing.load_config", return_value=empty_config):
             result = redirect.process(args)
         assert "no channel ID configured" in result["body"]

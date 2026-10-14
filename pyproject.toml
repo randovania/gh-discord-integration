@@ -17,7 +17,7 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-pythonpath = ["."]
+pythonpath = [".", "webhook/packages/ghapp/redirect"]
 testpaths = ["tests"]
 
 [tool.ruff]

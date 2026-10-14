@@ -18,6 +18,10 @@
   },
   "repository": {
     "name": "test-repo",
+    "full_name": "randovania/test-repo",
+    "owner": {
+      "login": "randovania"
+    },
     "html_url": "https://github.com/randovania/test-repo"
   },
   "sender": {

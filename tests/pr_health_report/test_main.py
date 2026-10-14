@@ -1,6 +1,5 @@
 import json
 from datetime import UTC, datetime, timedelta
-from typing import ClassVar
 
 import httpx
 
@@ -89,33 +88,6 @@ class TestClassifyPR:
         pr = make_pr(updated_at=(datetime.now(UTC) - timedelta(days=7)).isoformat())
         result = main.classify_pr(pr, set())
         assert result["age_days"] == 7
-
-
-class TestResolveChannel:
-    CONFIG: ClassVar[dict] = {
-        "label_channels": {"bug": "bugs-channel", "crash": "bugs-channel", "game: X": "x-channel"},
-        "repo_channels": {"special-repo": "special-channel"},
-    }
-
-    def test_label_beats_repo(self):
-        pr = make_pr(repo="special-repo", labels=["bug"])
-        assert main.resolve_channel(pr, self.CONFIG) == "bugs-channel"
-
-    def test_labels_for_different_channels_go_to_default(self):
-        pr = make_pr(repo="special-repo", labels=["bug", "game: X"])
-        assert main.resolve_channel(pr, self.CONFIG) == "default"
-
-    def test_labels_for_same_channel_keep_it(self):
-        pr = make_pr(repo="special-repo", labels=["bug", "crash"])
-        assert main.resolve_channel(pr, self.CONFIG) == "bugs-channel"
-
-    def test_repo_match(self):
-        pr = make_pr(repo="special-repo", labels=[])
-        assert main.resolve_channel(pr, self.CONFIG) == "special-channel"
-
-    def test_default_when_nothing_matches(self):
-        pr = make_pr(repo="unknown-repo", labels=[])
-        assert main.resolve_channel(pr, self.CONFIG) == "default"
 
 
 class TestSplitMessage:

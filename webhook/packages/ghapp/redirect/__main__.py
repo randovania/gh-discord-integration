@@ -1,5 +1,5 @@
 import os
-import tomllib
+import sys
 import traceback
 from pathlib import Path
 
@@ -20,29 +20,15 @@ _COLOR_GRAY = 0x24292E  # push
 _COLOR_BLUE = 0x0075CA  # comment / review
 
 
-def _load_config() -> dict:
-    # config.toml lives next to this file: DO only deploys the contents of the function
-    # directory, so it can't live anywhere else. main.py reads the same file.
-    candidates = [Path.cwd() / "config.toml"]
-    if "__file__" in globals():
-        candidates.insert(0, Path(__file__).resolve().parent / "config.toml")
-    for candidate in candidates:
-        if candidate.exists():
-            return tomllib.loads(candidate.read_text(encoding="utf-8"))
-    cwd_files = [p.name for p in Path.cwd().iterdir()]
-    raise FileNotFoundError(f"config.toml not found in {[str(c) for c in candidates]}; cwd contains {cwd_files}")
+def _routing():
+    # Imported lazily so a packaging problem fails inside main()'s try (visible in GitHub's
+    # Recent Deliveries) instead of killing the function at load time with no logs.
+    here = str(Path(__file__).resolve().parent) if "__file__" in globals() else str(Path.cwd())
+    if here not in sys.path:
+        sys.path.insert(0, here)
+    import routing
 
-
-def _resolve_channel(repository: str, labels: list[str], config: dict) -> str:
-    label_channels: dict[str, str] = config.get("label_channels", {})
-    repo_channels: dict[str, str] = config.get("repo_channels", {})
-    # Labels pointing at more than one channel (e.g. several games) go to 'default', same as the PR health report
-    matched = {label_channels[label] for label in labels if label in label_channels}
-    if len(matched) == 1:
-        return matched.pop()
-    if len(matched) > 1:
-        return "default"
-    return repo_channels.get(repository, "default")
+    return routing
 
 
 def _post_to_discord(channel_id: str, payload: dict) -> str:
@@ -317,11 +303,16 @@ def process(args: dict) -> dict:
     if not payload:
         return {"body": f"event '{event}' produces no message — skipped"}
 
-    config = _load_config()
+    routing = _routing()
+    config = routing.load_config()
     channels_config: dict[str, str] = config.get("discord", {}).get("channels", {})
 
-    repository = args["repository"]["name"]
-    channel_name = _resolve_channel(repository, labels, config)
+    repo = args["repository"]
+    repository = repo["name"]
+    owner = repo.get("owner", {}).get("login") or repo.get("full_name", "").partition("/")[0]
+    channel_name = routing.resolve_channel(owner, repository, labels, config)
+    if channel_name is None:
+        return {"body": f"ignored repository {owner}/{repository}"}
     channel_id = channels_config.get(channel_name) or channels_config.get("default", "")
 
     if not channel_id:

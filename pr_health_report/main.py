@@ -1,7 +1,7 @@
+import importlib.util
 import json
 import os
 import sys
-import tomllib
 from collections import defaultdict
 from datetime import UTC, datetime
 from pathlib import Path
@@ -9,6 +9,18 @@ from pathlib import Path
 import github
 import httpx
 from github import Github
+
+
+def _load_routing():
+    # Routing and config.toml are shared with the DO function, which can only see its own directory
+    path = Path(__file__).parent.parent / "webhook" / "packages" / "ghapp" / "redirect" / "routing.py"
+    spec = importlib.util.spec_from_file_location("routing", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+routing = _load_routing()
 
 CACHE_FILE = Path("pr_cache.json")
 CACHE_TTL_SECONDS = 3600
@@ -150,28 +162,6 @@ def classify_pr(pr: dict, dependency_authors: set[str]) -> dict:
 
 
 # ---------------------------------------------------------------------------
-# Channel routing
-# ---------------------------------------------------------------------------
-
-
-def resolve_channel(pr: dict, config: dict) -> str:
-    """Label mapping beats repo mapping; fall back to 'default'.
-
-    A PR whose labels point at more than one channel (e.g. it touches several games) goes to 'default'.
-    """
-    label_channels: dict[str, str] = config.get("label_channels", {})
-    repo_channels: dict[str, str] = config.get("repo_channels", {})
-
-    matched = {label_channels[label] for label in pr["labels"] if label in label_channels}
-    if len(matched) == 1:
-        return matched.pop()
-    if len(matched) > 1:
-        return "default"
-
-    return repo_channels.get(pr["repo"], "default")
-
-
-# ---------------------------------------------------------------------------
 # Report formatting
 # ---------------------------------------------------------------------------
 
@@ -225,13 +215,15 @@ def _pr_line(pr: dict, user_map: dict[str, str], *, show_author: bool = False) -
 def build_reports(prs: list[dict], config: dict, dependency_authors: set[str]) -> dict[str, str]:
     """Return a mapping of channel_name → formatted Discord message content."""
     user_map: dict[str, str] = config.get("user_map", {})
+    # Only the org's own repos are fetched, so every PR routes somewhere
+    org = config.get("github", {}).get("org", "")
 
     # Group classified PRs by channel, then by attention category.
     channel_buckets: dict[str, dict[str, list[dict]]] = defaultdict(lambda: defaultdict(list))
 
     for pr in prs:
         classified = classify_pr(pr, dependency_authors)
-        channel = resolve_channel(classified, config)
+        channel = routing.resolve_channel(org, classified["repo"], classified["labels"], config)
         for att in classified["attention"]:
             channel_buckets[channel][att].append(classified)
         if not classified["attention"]:
@@ -314,13 +306,7 @@ def main() -> None:
     dry_run = "--dry-run" in args
     refresh = "--refresh" in args
 
-    # Shared with the DO function, which can only see files inside its own directory
-    config_path = Path(__file__).parent.parent / "webhook" / "packages" / "ghapp" / "redirect" / "config.toml"
-    if not config_path.exists():
-        print("config.toml not found.", file=sys.stderr)
-        sys.exit(1)
-
-    config = tomllib.loads(config_path.read_text(encoding="utf-8"))
+    config = routing.load_config()
 
     gh_token = os.environ.get("GITHUB_TOKEN", "")
     if not gh_token:

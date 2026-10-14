@@ -156,13 +156,21 @@ class TestResolveChannel:
         result = redirect._resolve_channel("unknown-repo", [], config)
         assert result == "default"
 
-    def test_first_matching_label_wins(self):
+    def test_labels_for_different_channels_go_to_default(self):
         config = {
             "label_channels": {"bug": "bugs-channel", "urgent": "urgent-channel"},
-            "repo_channels": {},
+            "repo_channels": {"repo": "repo-channel"},
         }
         result = redirect._resolve_channel("repo", ["urgent", "bug"], config)
-        assert result == "urgent-channel"
+        assert result == "default"
+
+    def test_labels_for_same_channel_keep_it(self):
+        config = {
+            "label_channels": {"bug": "bugs-channel", "crash": "bugs-channel"},
+            "repo_channels": {},
+        }
+        result = redirect._resolve_channel("repo", ["crash", "bug"], config)
+        assert result == "bugs-channel"
 
 
 class TestProcess:

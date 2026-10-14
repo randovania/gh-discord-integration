@@ -36,9 +36,12 @@ def _load_config() -> dict:
 def _resolve_channel(repository: str, labels: list[str], config: dict) -> str:
     label_channels: dict[str, str] = config.get("label_channels", {})
     repo_channels: dict[str, str] = config.get("repo_channels", {})
-    for label in labels:
-        if label in label_channels:
-            return label_channels[label]
+    # Labels pointing at more than one channel (e.g. several games) go to 'default', same as the PR health report
+    matched = {label_channels[label] for label in labels if label in label_channels}
+    if len(matched) == 1:
+        return matched.pop()
+    if len(matched) > 1:
+        return "default"
     return repo_channels.get(repository, "default")
 
 

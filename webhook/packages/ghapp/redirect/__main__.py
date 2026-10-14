@@ -12,6 +12,9 @@ _ignored_users = {
     "renovate[bot]",
 }
 
+# Issue/PR actions that are just noise in a channel
+_SKIPPED_ACTIONS = {"labeled", "unlabeled"}
+
 # Colors matching Discord's GitHub integration
 _COLOR_GREEN = 0x2ECC71  # opened / created
 _COLOR_RED = 0xCB2431  # closed / deleted
@@ -88,6 +91,8 @@ def _build_message(event: str, args: dict) -> dict:
 
     if event == "pull_request":
         action = args.get("action", "?")
+        if action in _SKIPPED_ACTIONS:
+            return {}
         pr = args.get("pull_request", {})
         n = pr.get("number", "?")
         title = pr.get("title", "?")
@@ -161,6 +166,8 @@ def _build_message(event: str, args: dict) -> dict:
 
     if event == "issues":
         action = args.get("action", "?")
+        if action in _SKIPPED_ACTIONS:
+            return {}
         issue = args.get("issue", {})
         n = issue.get("number", "?")
         title = issue.get("title", "?")

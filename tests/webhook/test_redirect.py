@@ -4,6 +4,8 @@ import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
+import pytest
+
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
 REDIRECT_DIR = Path(__file__).parent.parent.parent / "webhook" / "packages" / "ghapp" / "redirect"
 
@@ -60,6 +62,12 @@ class TestBuildMessage:
         args = load_webhook("pull_request_merged.json")
         embed = redirect._build_message("pull_request", args)["embeds"][0]
         assert "description" not in embed
+
+    @pytest.mark.parametrize("event", ["issues", "pull_request"])
+    @pytest.mark.parametrize("action", ["labeled", "unlabeled"])
+    def test_label_changes_are_skipped(self, event, action):
+        args = {**load_webhook("pull_request_opened.json"), "action": action, "issue": {"number": 1}}
+        assert redirect._build_message(event, args) == {}
 
     def test_issue_opened_includes_description(self):
         args = {**load_webhook("pull_request_opened.json"), "action": "opened", "issue": {"number": 1, "body": "Hi!"}}

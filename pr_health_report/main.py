@@ -155,13 +155,18 @@ def classify_pr(pr: dict, dependency_authors: set[str]) -> dict:
 
 
 def resolve_channel(pr: dict, config: dict) -> str:
-    """Label mapping beats repo mapping; fall back to 'default'."""
+    """Label mapping beats repo mapping; fall back to 'default'.
+
+    A PR whose labels point at more than one channel (e.g. it touches several games) goes to 'default'.
+    """
     label_channels: dict[str, str] = config.get("label_channels", {})
     repo_channels: dict[str, str] = config.get("repo_channels", {})
 
-    for label in pr["labels"]:
-        if label in label_channels:
-            return label_channels[label]
+    matched = {label_channels[label] for label in pr["labels"] if label in label_channels}
+    if len(matched) == 1:
+        return matched.pop()
+    if len(matched) > 1:
+        return "default"
 
     return repo_channels.get(pr["repo"], "default")
 

@@ -93,12 +93,20 @@ class TestClassifyPR:
 
 class TestResolveChannel:
     CONFIG: ClassVar[dict] = {
-        "label_channels": {"bug": "bugs-channel"},
+        "label_channels": {"bug": "bugs-channel", "crash": "bugs-channel", "game: X": "x-channel"},
         "repo_channels": {"special-repo": "special-channel"},
     }
 
     def test_label_beats_repo(self):
         pr = make_pr(repo="special-repo", labels=["bug"])
+        assert main.resolve_channel(pr, self.CONFIG) == "bugs-channel"
+
+    def test_labels_for_different_channels_go_to_default(self):
+        pr = make_pr(repo="special-repo", labels=["bug", "game: X"])
+        assert main.resolve_channel(pr, self.CONFIG) == "default"
+
+    def test_labels_for_same_channel_keep_it(self):
+        pr = make_pr(repo="special-repo", labels=["bug", "crash"])
         assert main.resolve_channel(pr, self.CONFIG) == "bugs-channel"
 
     def test_repo_match(self):

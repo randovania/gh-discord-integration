@@ -18,6 +18,17 @@ def load_config() -> dict:
     raise FileNotFoundError(f"config.toml not found at {CONFIG_PATH} or in cwd; cwd contains {cwd_files}")
 
 
+def _repo_in(owner: str, repo: str, names: list[str], config: dict) -> bool:
+    # "owner/repo" always works; a bare name only matches the configured org's repos
+    org = config.get("github", {}).get("org", "")
+    return f"{owner}/{repo}" in names or (owner == org and repo in names)
+
+
+def wants_push(owner: str, repo: str, config: dict) -> bool:
+    """Push events are dropped unless the repo is listed in [webhook] push_repos."""
+    return _repo_in(owner, repo, config.get("webhook", {}).get("push_repos", []), config)
+
+
 def resolve_channels(owner: str, repo: str, labels: list[str], config: dict) -> list[str]:
     """Return the channel names for an event or PR; an empty list means it should be ignored.
 

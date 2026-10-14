@@ -99,3 +99,28 @@ def test_bundled_config_mars_routing(repo, labels, expected):
     channels = routing.resolve_channels("MetroidAdvRandomizerSystem", repo, labels, config)
     assert channels == expected
     assert all(channel in config["discord"]["channels"] for channel in channels)
+
+
+@pytest.mark.parametrize(
+    ("owner", "repo", "expected"),
+    [
+        ("MetroidAdvRandomizerSystem", "mars-fusion-asm", True),
+        ("MetroidAdvRandomizerSystem", "mars-mzm-decomp", True),
+        ("MetroidAdvRandomizerSystem", "mars-patcher-py", True),
+        ("MetroidAdvRandomizerSystem", "some-other-repo", False),
+        ("randovania", "randovania", False),
+        ("randovania", "YAMS", False),
+    ],
+)
+def test_bundled_config_push_repos(owner, repo, expected):
+    assert routing.wants_push(owner, repo, routing.load_config()) is expected
+
+
+def test_push_repos_bare_name_only_matches_org():
+    config = {"github": {"org": "randovania"}, "webhook": {"push_repos": ["YAMS"]}}
+    assert routing.wants_push("randovania", "YAMS", config)
+    assert not routing.wants_push("someone", "YAMS", config)
+
+
+def test_push_disabled_without_webhook_section():
+    assert not routing.wants_push("randovania", "YAMS", {"github": {"org": "randovania"}})

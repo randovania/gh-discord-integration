@@ -170,6 +170,28 @@ class TestProcess:
         posted = [call.args[0].split("/")[-2] for call in post.call_args_list]
         assert posted == ["111", "222", DISCORD_CHANNEL_ID]
 
+    def test_push_dropped_unless_enabled(self, monkeypatch):
+        monkeypatch.setenv("DISCORD_TOKEN", "test-bot-token")
+        args = load_webhook("push.json")
+        with (
+            patch("routing.load_config", return_value=TEST_CONFIG),
+            patch("requests.post") as post,
+        ):
+            result = redirect.process(args)
+        assert "not enabled" in result["body"]
+        post.assert_not_called()
+
+    def test_push_posted_when_enabled(self, monkeypatch):
+        monkeypatch.setenv("DISCORD_TOKEN", "test-bot-token")
+        args = load_webhook("push.json")
+        config = {**TEST_CONFIG, "webhook": {"push_repos": ["randovania/test-repo"]}}
+        with (
+            patch("routing.load_config", return_value=config),
+            patch("requests.post", return_value=MagicMock(status_code=200)) as post,
+        ):
+            redirect.process(args)
+        post.assert_called_once()
+
     def test_main_returns_500_on_error(self):
         args = load_webhook("pull_request_opened.json")
         with patch(

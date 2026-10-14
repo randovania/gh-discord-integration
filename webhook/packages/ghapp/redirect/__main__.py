@@ -21,15 +21,18 @@ _COLOR_BLUE = 0x0075CA    # comment / review
 
 
 def _load_config() -> dict:
-    # Walk up from this file's directory until config.toml is found.
-    # In the DO container the deployed root is a few levels up from the function dir.
-    here = Path(__file__).resolve().parent
-    for directory in [here, *here.parents]:
-        candidate = directory / "config.toml"
+    # config.toml lives next to this file: DO only deploys the contents of the function
+    # directory, so it can't live anywhere else. main.py reads the same file.
+    candidates = [Path.cwd() / "config.toml"]
+    if "__file__" in globals():
+        candidates.insert(0, Path(__file__).resolve().parent / "config.toml")
+    for candidate in candidates:
         if candidate.exists():
             with open(candidate, "rb") as f:
                 return tomllib.load(f)
-    raise FileNotFoundError("config.toml not found")
+    raise FileNotFoundError(
+        f"config.toml not found in {[str(c) for c in candidates]}; cwd contains {os.listdir('.')}"
+    )
 
 
 def _resolve_channel(repository: str, labels: list[str], config: dict) -> str:
@@ -42,13 +45,13 @@ def _resolve_channel(repository: str, labels: list[str], config: dict) -> str:
 
 
 def _post_to_discord(channel_id: str, payload: dict) -> str:
-    import httpx
+    # requests is preinstalled in the DO python runtime; anything else would need a build.sh
+    import requests
     token = os.environ["DISCORD_TOKEN"]
     url = f"{DISCORD_API}/channels/{channel_id}/messages"
-    with httpx.Client(headers={"Authorization": f"Bot {token}"}) as client:
-        resp = client.post(url, json=payload)
-        resp.raise_for_status()
-        return f"Posted to channel {channel_id}: {resp.status_code}"
+    resp = requests.post(url, json=payload, headers={"Authorization": f"Bot {token}"}, timeout=10)
+    resp.raise_for_status()
+    return f"Posted to channel {channel_id}: {resp.status_code}"
 
 
 def _author(args: dict) -> dict:
@@ -242,8 +245,9 @@ def process(args: dict) -> dict:
     return {"body": result}
 
 
-def main(args: dict, context: dict) -> dict:
+def main(args: dict, context=None) -> dict:
     try:
         return process(args)
     except Exception as e:
-        return {"body": "".join(traceback.format_exception(e))}
+        # Non-200 so the failure (and its traceback) shows up in the GitHub App's Recent Deliveries
+        return {"statusCode": 500, "body": "".join(traceback.format_exception(e))}

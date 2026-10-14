@@ -245,6 +245,7 @@ dependencies = [
 dev = [
     { name = "pytest" },
     { name = "pytest-httpx" },
+    { name = "requests" },
 ]
 
 [package.metadata]
@@ -257,6 +258,7 @@ requires-dist = [
 dev = [
     { name = "pytest", specifier = ">=8" },
     { name = "pytest-httpx", specifier = ">=0.31" },
+    { name = "requests", specifier = ">=2" },
 ]
 
 [[package]]

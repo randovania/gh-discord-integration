@@ -7,7 +7,7 @@ functions:
   github:
     branch: main
     deploy_on_push: true
-    repo: randovania/pr-health-report
+    repo: randovania/gh-discord-integration
 
   routes:
   - path: /

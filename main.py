@@ -282,7 +282,8 @@ def main() -> None:
     dry_run = "--dry-run" in args
     refresh = "--refresh" in args
 
-    config_path = Path(__file__).parent / "webhook" / "config.toml"
+    # Shared with the DO function, which can only see files inside its own directory
+    config_path = Path(__file__).parent / "webhook" / "packages" / "ghapp" / "redirect" / "config.toml"
     if not config_path.exists():
         print("config.toml not found.", file=sys.stderr)
         sys.exit(1)

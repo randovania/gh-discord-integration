@@ -13,9 +13,10 @@ dependencies = [
 dev = [
     "pytest>=8",
     "pytest-httpx>=0.31",
+    "requests>=2",
 ]
 
 [tool.pytest.ini_options]
-pythonpath = [".", "webhook/packages/ghapp/redirect"]
+pythonpath = ["."]
 testpaths = ["tests"]
 

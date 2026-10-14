@@ -34,6 +34,7 @@ mp-hunters-dev = "1362190173953065162"
 samus-returns-dev = "1048258924790419548"
 metroid-zero-mission-dev = "1506024860164554942"
 super-metroid-dev = "914294375264161843"
+yoku-dev = "1559975095710126163"
 
 # Map repository name → channel name (from discord.channels above).
 # PRs in repos not listed here go to the "default" channel.
@@ -54,6 +55,7 @@ open-prime-hunters-rando        = "mp-hunters-dev"
 open-prime-rando                = "mp2-echoes-dev"
 open-prime-rando-practice-mod   = "mp2-echoes-dev"
 open-samus-returns-rando        = "samus-returns-dev"
+open-yoku-rando                 = "yoku-dev"
 # pr-health-report
 # py-dolphin-memory-engine
 py-randomprime                  = "metroid-prime-dev"
@@ -81,6 +83,7 @@ YAMS                            = "am2r-dev"
 "game: Metroid Prime Hunters"   = "mp-hunters-dev"
 "game: Metroid Zero Mission"    = "metroid-zero-mission-dev"
 "game: Metroid: Samus Returns"  = "samus-returns-dev"
+"game: Yoku's Island Express"   = "yoku-dev"
 
 # Map GitHub username → Discord user ID (numeric).
 # When present, "changes requested" lines mention the author directly.

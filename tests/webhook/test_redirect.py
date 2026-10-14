@@ -55,6 +55,22 @@ class TestBuildMessage:
         assert embed["color"] == redirect._COLOR_RED
         assert "closed" in embed["title"]
 
+    def test_pull_request_merged_omits_description(self):
+        args = load_webhook("pull_request_merged.json")
+        embed = redirect._build_message("pull_request", args)["embeds"][0]
+        assert "description" not in embed
+
+    def test_issue_opened_includes_description(self):
+        args = {**load_webhook("pull_request_opened.json"), "action": "opened", "issue": {"number": 1, "body": "Hi!"}}
+        embed = redirect._build_message("issues", args)["embeds"][0]
+        assert embed["description"] == "Hi!"
+
+    def test_issue_closed_omits_description(self):
+        args = {**load_webhook("pull_request_opened.json"), "action": "closed", "issue": {"number": 1, "body": "Hi!"}}
+        embed = redirect._build_message("issues", args)["embeds"][0]
+        assert embed["color"] == redirect._COLOR_RED
+        assert "description" not in embed
+
     def test_pull_request_body_truncated_at_300(self):
         args = load_webhook("pull_request_opened.json")
         args = {**args, "pull_request": {**args["pull_request"], "body": "x" * 500}}

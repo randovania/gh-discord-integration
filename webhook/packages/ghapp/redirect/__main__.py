@@ -103,7 +103,8 @@ def _build_message(event: str, args: dict) -> dict:
         n = pr.get("number", "?")
         title = pr.get("title", "?")
         url = pr.get("html_url", "")
-        body = (pr.get("body") or "")[:300]
+        # The description is only news when the PR is opened, not on every later action
+        body = (pr.get("body") or "")[:300] if action == "opened" else ""
         merged = pr.get("merged", False)
         if action == "closed":
             verb, color = ("merged", _COLOR_PURPLE) if merged else ("closed", _COLOR_RED)
@@ -175,7 +176,8 @@ def _build_message(event: str, args: dict) -> dict:
         n = issue.get("number", "?")
         title = issue.get("title", "?")
         url = issue.get("html_url", "")
-        body = (issue.get("body") or "")[:300]
+        # The description is only news when the issue is opened, not on every later action
+        body = (issue.get("body") or "")[:300] if action == "opened" else ""
         color = _COLOR_GREEN if action == "opened" else (_COLOR_RED if action == "closed" else _COLOR_BLUE)
         return {"embeds": [_embed(color, f"[{repo}] Issue {action}: #{n} {title}", url, body, args)]}
 

@@ -1,7 +1,6 @@
-from datetime import datetime, timezone, timedelta
+from datetime import UTC, datetime, timedelta
 
 import httpx
-import pytest
 
 import main
 
@@ -16,8 +15,8 @@ def make_pr(**overrides) -> dict:
         "url": "https://github.com/org/test-repo/pull/1",
         "author": "alice",
         "labels": [],
-        "created_at": (datetime.now(timezone.utc) - timedelta(days=5)).isoformat(),
-        "updated_at": (datetime.now(timezone.utc) - timedelta(days=2)).isoformat(),
+        "created_at": (datetime.now(UTC) - timedelta(days=5)).isoformat(),
+        "updated_at": (datetime.now(UTC) - timedelta(days=2)).isoformat(),
         "requested_reviewers": [],
         "requested_teams": [],
         "reviews": [],
@@ -43,21 +42,29 @@ class TestClassifyPR:
         assert "awaiting_review" in result["attention"]
 
     def test_changes_requested(self):
-        pr = make_pr(reviews=[{"reviewer": "bob", "state": "CHANGES_REQUESTED", "submitted_at": None}])
+        pr = make_pr(
+            reviews=[
+                {"reviewer": "bob", "state": "CHANGES_REQUESTED", "submitted_at": None}
+            ]
+        )
         result = main.classify_pr(pr, set())
         assert "changes_requested" in result["attention"]
 
     def test_changes_requested_suppresses_awaiting_review(self):
         pr = make_pr(
             requested_reviewers=["carol"],
-            reviews=[{"reviewer": "bob", "state": "CHANGES_REQUESTED", "submitted_at": None}],
+            reviews=[
+                {"reviewer": "bob", "state": "CHANGES_REQUESTED", "submitted_at": None}
+            ],
         )
         result = main.classify_pr(pr, set())
         assert "changes_requested" in result["attention"]
         assert "awaiting_review" not in result["attention"]
 
     def test_ready_to_merge_when_approved_and_no_pending_request(self):
-        pr = make_pr(reviews=[{"reviewer": "bob", "state": "APPROVED", "submitted_at": None}])
+        pr = make_pr(
+            reviews=[{"reviewer": "bob", "state": "APPROVED", "submitted_at": None}]
+        )
         result = main.classify_pr(pr, set())
         assert "ready_to_merge" in result["attention"]
 
@@ -79,13 +86,15 @@ class TestClassifyPR:
         assert result["attention"] == ["dependencies"]
 
     def test_commented_review_does_not_count_as_decisive(self):
-        pr = make_pr(reviews=[{"reviewer": "bob", "state": "COMMENTED", "submitted_at": None}])
+        pr = make_pr(
+            reviews=[{"reviewer": "bob", "state": "COMMENTED", "submitted_at": None}]
+        )
         result = main.classify_pr(pr, set())
         assert "needs_reviewer" not in result["attention"]
         assert "ready_to_merge" not in result["attention"]
 
     def test_age_days_computed_from_updated_at(self):
-        pr = make_pr(updated_at=(datetime.now(timezone.utc) - timedelta(days=7)).isoformat())
+        pr = make_pr(updated_at=(datetime.now(UTC) - timedelta(days=7)).isoformat())
         result = main.classify_pr(pr, set())
         assert result["age_days"] == 7
 

@@ -4,10 +4,10 @@ import sys
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-import pytest
-
 FIXTURES_DIR = Path(__file__).parent.parent / "fixtures"
-REDIRECT_DIR = Path(__file__).parent.parent.parent / "webhook" / "packages" / "ghapp" / "redirect"
+REDIRECT_DIR = (
+    Path(__file__).parent.parent.parent / "webhook" / "packages" / "ghapp" / "redirect"
+)
 
 # DO needs the handler to be called __main__.py, so load it by path under a usable name
 _spec = importlib.util.spec_from_file_location("redirect", REDIRECT_DIR / "__main__.py")
@@ -101,7 +101,10 @@ class TestBuildMessage:
         assert "changes requested" in embed["title"]
 
     def test_pull_request_review_not_submitted_is_skipped(self):
-        args = {**load_webhook("pull_request_review_approved.json"), "action": "dismissed"}
+        args = {
+            **load_webhook("pull_request_review_approved.json"),
+            "action": "dismissed",
+        }
         msg = redirect._build_message("pull_request_review", args)
         assert msg == {}
 
@@ -159,14 +162,22 @@ class TestProcess:
             patch("requests.post", return_value=response) as post,
         ):
             result = redirect.process(args)
-        assert post.call_args.args[0] == f"https://discord.com/api/v10/channels/{DISCORD_CHANNEL_ID}/messages"
-        assert post.call_args.kwargs["headers"] == {"Authorization": "Bot test-bot-token"}
+        assert (
+            post.call_args.args[0]
+            == f"https://discord.com/api/v10/channels/{DISCORD_CHANNEL_ID}/messages"
+        )
+        assert post.call_args.kwargs["headers"] == {
+            "Authorization": "Bot test-bot-token"
+        }
         assert "Posted to channel" in result["body"]
         assert DISCORD_CHANNEL_ID in result["body"]
 
     def test_main_returns_500_on_error(self):
         args = load_webhook("pull_request_opened.json")
-        with patch("redirect._load_config", side_effect=FileNotFoundError("config.toml not found")):
+        with patch(
+            "redirect._load_config",
+            side_effect=FileNotFoundError("config.toml not found"),
+        ):
             result = redirect.main(args)
         assert result["statusCode"] == 500
         assert "config.toml not found" in result["body"]

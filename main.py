@@ -1,12 +1,12 @@
-import github
 import json
 import os
 import sys
 import tomllib
 from collections import defaultdict
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
+import github
 import httpx
 from github import Github
 
@@ -18,12 +18,13 @@ CACHE_TTL_SECONDS = 3600
 # Caching
 # ---------------------------------------------------------------------------
 
+
 def _load_cache() -> list[dict] | None:
     if not CACHE_FILE.exists():
         return None
     data = json.loads(CACHE_FILE.read_text(encoding="utf-8"))
     cached_at = datetime.fromisoformat(data["cached_at"])
-    age = (datetime.now(timezone.utc) - cached_at).total_seconds()
+    age = (datetime.now(UTC) - cached_at).total_seconds()
     if age >= CACHE_TTL_SECONDS:
         return None
     print(f"Using cached PR data (age: {age:.0f}s).")
@@ -32,7 +33,7 @@ def _load_cache() -> list[dict] | None:
 
 def _save_cache(prs: list[dict]) -> None:
     CACHE_FILE.write_text(
-        json.dumps({"cached_at": datetime.now(timezone.utc).isoformat(), "prs": prs}, indent=2),
+        json.dumps({"cached_at": datetime.now(UTC).isoformat(), "prs": prs}, indent=2),
         encoding="utf-8",
     )
 
@@ -41,10 +42,13 @@ def _save_cache(prs: list[dict]) -> None:
 # GitHub fetching
 # ---------------------------------------------------------------------------
 
+
 def _collapse_reviews(raw_reviews) -> list[dict]:
     """Return the latest meaningful review per reviewer, excluding dismissed/pending."""
     by_reviewer: dict[str, dict] = {}
-    for review in sorted(raw_reviews, key=lambda r: r.submitted_at or datetime.min.replace(tzinfo=timezone.utc)):
+    for review in sorted(
+        raw_reviews, key=lambda r: r.submitted_at or datetime.min.replace(tzinfo=UTC)
+    ):
         if review.state not in ("APPROVED", "CHANGES_REQUESTED", "COMMENTED"):
             continue
         if review.user is None:
@@ -52,12 +56,20 @@ def _collapse_reviews(raw_reviews) -> list[dict]:
         by_reviewer[review.user.login] = {
             "reviewer": review.user.login,
             "state": review.state,
-            "submitted_at": review.submitted_at.isoformat() if review.submitted_at else None,
+            "submitted_at": review.submitted_at.isoformat()
+            if review.submitted_at
+            else None,
         }
     return list(by_reviewer.values())
 
 
-def fetch_prs(token: str, org_name: str, *, refresh: bool = False, skip_repos: set[str] | None = None) -> list[dict]:
+def fetch_prs(
+    token: str,
+    org_name: str,
+    *,
+    refresh: bool = False,
+    skip_repos: set[str] | None = None,
+) -> list[dict]:
     if not refresh:
         cached = _load_cache()
         if cached is not None:
@@ -84,19 +96,21 @@ def fetch_prs(token: str, org_name: str, *, refresh: bool = False, skip_repos: s
         for pr in non_draft:
             req_users, req_teams = pr.get_review_requests()
             reviews = _collapse_reviews(pr.get_reviews())
-            prs.append({
-                "repo": repo.name,
-                "number": pr.number,
-                "title": pr.title,
-                "url": pr.html_url,
-                "author": pr.user.login,
-                "labels": [lbl.name for lbl in pr.labels],
-                "created_at": pr.created_at.isoformat(),
-                "updated_at": pr.updated_at.isoformat(),
-                "requested_reviewers": [u.login for u in req_users],
-                "requested_teams": [t.slug for t in req_teams],
-                "reviews": reviews,
-            })
+            prs.append(
+                {
+                    "repo": repo.name,
+                    "number": pr.number,
+                    "title": pr.title,
+                    "url": pr.html_url,
+                    "author": pr.user.login,
+                    "labels": [lbl.name for lbl in pr.labels],
+                    "created_at": pr.created_at.isoformat(),
+                    "updated_at": pr.updated_at.isoformat(),
+                    "requested_reviewers": [u.login for u in req_users],
+                    "requested_teams": [t.slug for t in req_teams],
+                    "reviews": reviews,
+                }
+            )
 
     _save_cache(prs)
     print(f"Fetched {len(prs)} PR(s), cached to {CACHE_FILE}.")
@@ -107,9 +121,10 @@ def fetch_prs(token: str, org_name: str, *, refresh: bool = False, skip_repos: s
 # Classification
 # ---------------------------------------------------------------------------
 
+
 def classify_pr(pr: dict, dependency_authors: set[str]) -> dict:
     updated_at = datetime.fromisoformat(pr["updated_at"])
-    age_days = (datetime.now(timezone.utc) - updated_at).days
+    age_days = (datetime.now(UTC) - updated_at).days
 
     if pr["author"] in dependency_authors:
         return {**pr, "attention": ["dependencies"], "age_days": age_days}
@@ -141,6 +156,7 @@ def classify_pr(pr: dict, dependency_authors: set[str]) -> dict:
 # ---------------------------------------------------------------------------
 # Channel routing
 # ---------------------------------------------------------------------------
+
 
 def resolve_channel(pr: dict, config: dict) -> str:
     """Label mapping beats repo mapping; fall back to 'default'."""
@@ -174,7 +190,13 @@ _ATTENTION_HEADING = {
     "dependencies": "Dependency updates",
 }
 
-_ATTENTION_ORDER = ["needs_reviewer", "changes_requested", "awaiting_review", "ready_to_merge", "dependencies"]
+_ATTENTION_ORDER = [
+    "needs_reviewer",
+    "changes_requested",
+    "awaiting_review",
+    "ready_to_merge",
+    "dependencies",
+]
 
 
 def _age_str(days: int) -> str:
@@ -199,12 +221,16 @@ def _pr_line(pr: dict, user_map: dict[str, str], *, show_author: bool = False) -
     return f"{base} — {age}"
 
 
-def build_reports(prs: list[dict], config: dict, dependency_authors: set[str]) -> dict[str, str]:
+def build_reports(
+    prs: list[dict], config: dict, dependency_authors: set[str]
+) -> dict[str, str]:
     """Return a mapping of channel_name → formatted Discord message content."""
     user_map: dict[str, str] = config.get("user_map", {})
 
     # Group classified PRs by channel, then by attention category.
-    channel_buckets: dict[str, dict[str, list[dict]]] = defaultdict(lambda: defaultdict(list))
+    channel_buckets: dict[str, dict[str, list[dict]]] = defaultdict(
+        lambda: defaultdict(list)
+    )
 
     for pr in prs:
         classified = classify_pr(pr, dependency_authors)
@@ -214,7 +240,7 @@ def build_reports(prs: list[dict], config: dict, dependency_authors: set[str]) -
         if not classified["attention"]:
             channel_buckets[channel]["_other"].append(classified)
 
-    now_str = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")
+    now_str = datetime.now(UTC).strftime("%Y-%m-%d %H:%M UTC")
     reports: dict[str, str] = {}
 
     for channel, buckets in channel_buckets.items():
@@ -234,7 +260,9 @@ def build_reports(prs: list[dict], config: dict, dependency_authors: set[str]) -
 
         if "_other" in buckets:
             lines = ["📌 **Other open PRs**"]
-            for pr in sorted(buckets["_other"], key=lambda p: p["age_days"], reverse=True):
+            for pr in sorted(
+                buckets["_other"], key=lambda p: p["age_days"], reverse=True
+            ):
                 lines.append(_pr_line(pr, user_map))
             sections.append("\n".join(lines))
 
@@ -277,13 +305,21 @@ def post_to_channel(client: httpx.Client, channel_id: str, content: str) -> None
 # Entry point
 # ---------------------------------------------------------------------------
 
+
 def main() -> None:
     args = set(sys.argv[1:])
     dry_run = "--dry-run" in args
     refresh = "--refresh" in args
 
     # Shared with the DO function, which can only see files inside its own directory
-    config_path = Path(__file__).parent / "webhook" / "packages" / "ghapp" / "redirect" / "config.toml"
+    config_path = (
+        Path(__file__).parent
+        / "webhook"
+        / "packages"
+        / "ghapp"
+        / "redirect"
+        / "config.toml"
+    )
     if not config_path.exists():
         print("config.toml not found.", file=sys.stderr)
         sys.exit(1)
@@ -304,9 +340,16 @@ def main() -> None:
     github_config = config["github"]
     org_name: str = github_config["org"]
     skip_repos: set[str] = set(github_config.get("skip_repos", []))
-    dependency_authors: set[str] = set(github_config.get("dependency_authors", [
-        "dependabot[bot]", "renovate[bot]", "pre-commit-ci[bot]",
-    ]))
+    dependency_authors: set[str] = set(
+        github_config.get(
+            "dependency_authors",
+            [
+                "dependabot[bot]",
+                "renovate[bot]",
+                "pre-commit-ci[bot]",
+            ],
+        )
+    )
 
     prs = fetch_prs(gh_token, org_name, refresh=refresh, skip_repos=skip_repos)
 
@@ -331,7 +374,9 @@ def main() -> None:
                 continue
 
             if not channel_id:
-                print(f"[{channel_name}] No channel ID configured — skipping. (Use --dry-run to preview.)")
+                print(
+                    f"[{channel_name}] No channel ID configured — skipping. (Use --dry-run to preview.)"
+                )
                 continue
 
             print(f"Posting to channel '{channel_name}' ({channel_id})…")
@@ -340,12 +385,19 @@ def main() -> None:
             except Exception as exc:
                 print(f"  Error: {exc}", file=sys.stderr)
                 if channel_name != "default" and default_channel_id:
-                    error_notice = f"⚠️ Failed to post PR report to **{channel_name}**: {exc}"
-                    print(f"  Forwarding error to default channel ({default_channel_id})…")
+                    error_notice = (
+                        f"⚠️ Failed to post PR report to **{channel_name}**: {exc}"
+                    )
+                    print(
+                        f"  Forwarding error to default channel ({default_channel_id})…"
+                    )
                     try:
                         post_to_channel(client, default_channel_id, error_notice)
                     except Exception as inner_exc:
-                        print(f"  Could not reach default channel either: {inner_exc}", file=sys.stderr)
+                        print(
+                            f"  Could not reach default channel either: {inner_exc}",
+                            file=sys.stderr,
+                        )
                 continue
             print("  Done.")
 

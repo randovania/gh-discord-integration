@@ -148,7 +148,12 @@ class TestProcess:
         monkeypatch.setenv("DISCORD_TOKEN", "test-bot-token")
         response = MagicMock(status_code=200)
         response.json.return_value = load_discord_response("message_ok.json")
-        args = load_webhook("pull_request_opened.json")
+        # An ungrouped event goes straight to a new message
+        args = {
+            **load_webhook("pull_request_opened.json"),
+            "http": {"headers": {"x-github-event": "issues"}},
+            "issue": {"number": 7, "title": "Bug", "labels": []},
+        }
         with (
             patch("routing.load_config", return_value=TEST_CONFIG),
             patch("requests.post", return_value=response) as post,
@@ -159,7 +164,15 @@ class TestProcess:
         assert "Posted to channel" in result["body"]
         assert DISCORD_CHANNEL_ID in result["body"]
 
-    def test_posts_to_every_resolved_channel_once(self, monkeypatch):
+    def test_grouped_event_goes_through_grouping(self, discord):
+        args = load_webhook("pull_request_opened.json")
+        with patch("routing.load_config", return_value=TEST_CONFIG):
+            result = redirect.process(args)
+        [embed] = discord.embeds(DISCORD_CHANNEL_ID)
+        assert embed["footer"]["text"] == "randovania/test-repo#42"
+        assert "Posted new message" in result["body"]
+
+    def test_posts_to_every_resolved_channel_once(self, discord, monkeypatch):
         monkeypatch.setenv("DISCORD_TOKEN", "test-bot-token")
         config = {
             "github": {"org": "randovania"},
@@ -170,13 +183,10 @@ class TestProcess:
         }
         args = load_webhook("pull_request_opened.json")
         args["repository"] = {**args["repository"], "full_name": "other/test-repo", "owner": {"login": "other"}}
-        with (
-            patch("routing.load_config", return_value=config),
-            patch("requests.post", return_value=MagicMock(status_code=200)) as post,
-        ):
+        with patch("routing.load_config", return_value=config):
             redirect.process(args)
-        posted = [call.args[0].split("/")[-2] for call in post.call_args_list]
-        assert posted == ["111", "222", DISCORD_CHANNEL_ID]
+        assert list(discord.channels) == ["111", "222", DISCORD_CHANNEL_ID]
+        assert all(len(messages) == 1 for messages in discord.channels.values())
 
     def test_push_dropped_unless_enabled(self, monkeypatch):
         monkeypatch.setenv("DISCORD_TOKEN", "test-bot-token")

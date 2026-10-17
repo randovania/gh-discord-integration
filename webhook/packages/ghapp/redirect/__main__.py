@@ -1,6 +1,8 @@
+import importlib
 import os
 import sys
 import traceback
+from datetime import timedelta
 from pathlib import Path
 
 DISCORD_API = "https://discord.com/api/v10"
@@ -23,15 +25,13 @@ _COLOR_GRAY = 0x24292E  # push
 _COLOR_BLUE = 0x0075CA  # comment / review
 
 
-def _routing():
-    # Imported lazily so a packaging problem fails inside main()'s try (visible in GitHub's
-    # Recent Deliveries) instead of killing the function at load time with no logs.
+def _local(name: str):
+    # Sibling modules are imported lazily so a packaging problem fails inside main()'s try (visible
+    # in GitHub's Recent Deliveries) instead of killing the function at load time with no logs.
     here = str(Path(__file__).resolve().parent) if "__file__" in globals() else str(Path.cwd())
     if here not in sys.path:
         sys.path.insert(0, here)
-    import routing
-
-    return routing
+    return importlib.import_module(name)
 
 
 def _post_to_discord(channel_id: str, payload: dict) -> str:
@@ -310,7 +310,7 @@ def process(args: dict) -> dict:
     if not payload:
         return {"body": f"event '{event}' produces no message — skipped"}
 
-    routing = _routing()
+    routing = _local("routing")
     config = routing.load_config()
     channels_config: dict[str, str] = config.get("discord", {}).get("channels", {})
 
@@ -333,10 +333,19 @@ def process(args: dict) -> dict:
     if not channel_ids:
         return {"body": f"no channel ID configured for {channel_names} or 'default'"}
 
+    # Bursts of related PR events (opened + review requests, approve → queue → merge, ...) edit one message
+    grouping = _local("grouping")
+    update = grouping.build_update(event, args, owner, _author(args))
+    client = grouping.DiscordClient() if update else None
+    window = timedelta(minutes=config.get("webhook", {}).get("merge_window_minutes", 30))
+
     results = []
     for channel_id, channel_name in channel_ids.items():
         print(f"Routing {event} from {owner}/{repository} to channel {channel_name} ({channel_id})")
-        results.append(_post_to_discord(channel_id, payload))
+        if update:
+            results.append(grouping.deliver(client, channel_id, update, window))
+        else:
+            results.append(_post_to_discord(channel_id, payload))
     return {"body": "\n".join(results)}
 
 

@@ -16,6 +16,10 @@ dependency_authors = [
 ]
 
 [webhook]
+# Related PR events (opened + review requests, pushes, approve → merge queue → merged) edit the PR's
+# previous message instead of posting, if it was last updated within this many minutes.
+merge_window_minutes = 30
+
 # Push events are dropped unless the repo is listed here ("owner/repo", or a bare name for the org's repos).
 push_repos = [
     "MetroidAdvRandomizerSystem/mars-fusion-asm",

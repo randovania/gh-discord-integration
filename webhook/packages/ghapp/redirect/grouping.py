@@ -19,7 +19,7 @@ requests + stdlib only: the DO function runs on the python:3.11 runtime.
 import os
 import random
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import UTC, datetime, timedelta
 
 DISCORD_API = "https://discord.com/api/v10"
@@ -104,6 +104,9 @@ class Update:
     line: str | None  # merge timeline line
     state: str | None  # merge state for the title
     opened: dict | None  # an "opened" embed takes over title/description/color of an earlier message
+    # embed key -> (before, after): only applied while the message still shows "before", so an older
+    # edit handled late can't overwrite a newer one
+    replace: dict[str, tuple[str, str]] = field(default_factory=dict)
 
     def apply(self, existing: dict | None) -> dict | None:
         """Return the embed to write, or None if the existing one already has everything."""
@@ -112,6 +115,10 @@ class Update:
             return None
         if existing and self.opened:
             embed.update({k: self.opened[k] for k in ("title", "color", "url", "description") if k in self.opened})
+        if existing:
+            for key, (before, after) in self.replace.items():
+                if (embed.get(key) or "") == before:
+                    embed[key] = after
 
         fields = {f["name"]: f["value"] for f in embed.get("fields", [])}
         if self.reviewers:
@@ -176,8 +183,58 @@ def _logins(users: list[dict], key: str) -> list[str]:
     return [u[key] for u in users if u.get(key)]
 
 
+# A release edit with no message to update only posts while the release is this new: its "published"
+# event may be handled at the same moment. Edits to older releases are dropped.
+_RELEASE_BURST = timedelta(minutes=10)
+
+
+def _release_update(args: dict, owner: str, author: dict) -> Update | None:
+    action = args.get("action")
+    if action not in ("published", "edited"):
+        return None
+    release = args.get("release") or {}
+    repo = args.get("repository", {}).get("name", "?")
+    tag = release.get("tag_name", "?")
+
+    def title(name: str | None) -> str:
+        return f"[{repo}] New release published: {name or tag}"
+
+    def body(text: str | None) -> str:
+        return (text or "")[:300]
+
+    embed = {
+        "color": _COLOR_GREEN,
+        "author": author,
+        "title": title(release.get("name")),
+        "url": release.get("html_url", ""),
+        "description": body(release.get("body")),
+    }
+    defaults = {"reviewers": [], "pushes": 0, "line": None, "state": None, "opened": None}
+    footer = f"{owner}/{repo} {tag}"
+    if action == "published":
+        # Content changes after this arrive as "edited" events; never overwrite them with this copy
+        return Update(footer=footer, fresh=embed, **defaults)
+
+    changes = args.get("changes") or {}
+    replace = {}
+    if "name" in changes:
+        replace["title"] = (title(changes["name"].get("from")), embed["title"])
+    if "body" in changes:
+        replace["description"] = (body(changes["body"].get("from")), embed["description"])
+    published_at = release.get("published_at")
+    recent = (
+        not release.get("draft")
+        and published_at
+        and _now() - datetime.fromisoformat(published_at.replace("Z", "+00:00")) < _RELEASE_BURST
+    )
+    return Update(footer=footer, fresh=embed if recent else None, replace=replace, **defaults)
+
+
 def build_update(event: str, args: dict, owner: str, author: dict) -> Update | None:
     """The grouped contribution of this event, or None if the event isn't grouped."""
+    if event == "release":
+        return _release_update(args, owner, author)
+
     pr = args.get("pull_request") or {}
     action = args.get("action")
     if not pr or "number" not in pr:
@@ -278,6 +335,8 @@ def deliver(client, channel_id: str, update: Update, window: timedelta) -> str:
     try:
         recent = _recent(client.get_messages(channel_id), update.footer, window)
     except Exception as e:
+        if update.fresh is None:
+            return f"Could not read channel {channel_id} ({e}); nothing to update"
         # e.g. missing Read Message History: post rather than drop the event
         client.post(channel_id, update.apply(None))
         return f"Could not read channel {channel_id} ({e}); posted a new message"
@@ -292,6 +351,8 @@ def deliver(client, channel_id: str, update: Update, window: timedelta) -> str:
             if recent:
                 return _edit(client, channel_id, recent[0], update)
 
+    if update.fresh is None:
+        return f"No recent message for {update.footer} in channel {channel_id} to update"
     posted = client.post(channel_id, update.apply(None))
 
     # Another invocation may have posted for the same PR at the same time: the oldest message wins

@@ -306,3 +306,79 @@ def test_keeps_writing_when_always_overwritten(discord):
     # Two verified attempts, then one final write
     assert discord.patches == 3
     assert "after retries" in result
+
+
+# ---------------------------------------------------------------------------
+# Releases
+# ---------------------------------------------------------------------------
+
+
+def release_event(action: str, body: str, name: str = "v0.0.2", changes: dict | None = None, published_ago=None):
+    published_at = (grouping._now() - (published_ago or timedelta(seconds=5))).isoformat()
+    args = {
+        "action": action,
+        "release": {
+            "tag_name": "v0.0.2",
+            "name": name,
+            "body": body,
+            "html_url": "https://github.com/randovania/open-yoku-rando/releases/tag/v0.0.2",
+            "draft": False,
+            "published_at": published_at,
+        },
+        "repository": {"name": "open-yoku-rando"},
+        "sender": {"login": "github-actions[bot]"},
+    }
+    if changes is not None:
+        args["changes"] = changes
+    return "release", args
+
+
+def test_release_edit_updates_published_message(discord):
+    send(discord, release_event("published", "New release"))
+    send(discord, release_event("edited", "Real notes", changes={"body": {"from": "New release"}}))
+
+    [embed] = discord.embeds(CHANNEL)
+    assert embed["title"] == "[open-yoku-rando] New release published: v0.0.2"
+    assert embed["description"] == "Real notes"
+    assert embed["footer"]["text"] == "randovania/open-yoku-rando v0.0.2"
+
+
+def test_release_edit_handled_before_published(discord):
+    send(discord, release_event("edited", "Real notes", changes={"body": {"from": "New release"}}))
+    # The published payload still carries the old body; it must not overwrite the edit
+    result = send(discord, release_event("published", "New release"))
+
+    [embed] = discord.embeds(CHANNEL)
+    assert embed["description"] == "Real notes"
+    assert "already up to date" in result
+
+
+def test_older_release_edit_handled_late_is_ignored(discord):
+    send(discord, release_event("published", "A"))
+    send(discord, release_event("edited", "C", changes={"body": {"from": "B"}}))  # no-op: message shows "A"
+    send(discord, release_event("edited", "B", changes={"body": {"from": "A"}}))
+    send(discord, release_event("edited", "C", changes={"body": {"from": "B"}}))
+    send(discord, release_event("edited", "B", changes={"body": {"from": "A"}}))  # late duplicate
+
+    assert discord.embeds(CHANNEL)[0]["description"] == "C"
+
+
+def test_release_rename_updates_title(discord):
+    send(discord, release_event("published", "notes", name="v0.0.2"))
+    send(discord, release_event("edited", "notes", name="Yoku 0.0.2", changes={"name": {"from": "v0.0.2"}}))
+    assert discord.embeds(CHANNEL)[0]["title"] == "[open-yoku-rando] New release published: Yoku 0.0.2"
+
+
+def test_edit_of_old_release_without_message_posts_nothing(discord):
+    result = send(
+        discord,
+        release_event("edited", "fix typo", changes={"body": {"from": "fix tpyo"}}, published_ago=timedelta(days=2)),
+    )
+    assert discord.embeds(CHANNEL) == []
+    assert "No recent message" in result
+
+
+def test_release_edit_of_other_fields_changes_nothing(discord):
+    send(discord, release_event("published", "notes"))
+    result = send(discord, release_event("edited", "notes", changes={"prerelease": {"from": True}}))
+    assert "already up to date" in result

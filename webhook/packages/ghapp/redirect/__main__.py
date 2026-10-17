@@ -234,7 +234,8 @@ def _build_message(event: str, args: dict) -> dict:
 
     if event == "release":
         action = args.get("action", "?")
-        if action != "published":
+        # "edited" updates the published message (see grouping.py)
+        if action not in ("published", "edited"):
             return {}
         release = args.get("release", {})
         tag = release.get("tag_name", "?")

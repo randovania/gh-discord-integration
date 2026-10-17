@@ -172,6 +172,34 @@ class TestProcess:
         assert embed["footer"]["text"] == "randovania/test-repo#42"
         assert "Posted new message" in result["body"]
 
+    def test_release_edit_updates_message(self, discord):
+        release = {
+            "tag_name": "v1",
+            "name": "v1",
+            "body": "New release",
+            "html_url": "https://github.com/randovania/test-repo/releases/tag/v1",
+            "draft": False,
+            "published_at": "2026-10-17T07:25:00Z",
+        }
+        base = {k: v for k, v in load_webhook("pull_request_opened.json").items() if k != "pull_request"}
+        published = {
+            **base,
+            "http": {"headers": {"x-github-event": "release"}},
+            "action": "published",
+            "release": release,
+        }
+        edited = {
+            **published,
+            "action": "edited",
+            "release": {**release, "body": "Real notes"},
+            "changes": {"body": {"from": "New release"}},
+        }
+        with patch("routing.load_config", return_value=TEST_CONFIG):
+            redirect.process(published)
+            redirect.process(edited)
+        [embed] = discord.embeds(DISCORD_CHANNEL_ID)
+        assert embed["description"] == "Real notes"
+
     def test_grouped_event_jitters_once_for_all_channels(self, discord, monkeypatch):
         sleeps = []
         monkeypatch.setattr("grouping._sleep", sleeps.append)

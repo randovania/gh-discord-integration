@@ -336,7 +336,10 @@ def process(args: dict) -> dict:
     # Bursts of related PR events (opened + review requests, approve → queue → merge, ...) edit one message
     grouping = _local("grouping")
     update = grouping.build_update(event, args, owner, _author(args))
-    client = grouping.DiscordClient() if update else None
+    client = None
+    if update:
+        client = grouping.DiscordClient()
+        grouping.jitter()
     window = timedelta(minutes=config.get("webhook", {}).get("merge_window_minutes", 30))
 
     results = []

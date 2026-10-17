@@ -55,6 +55,10 @@ def _sleep(seconds: float) -> None:
     time.sleep(seconds)
 
 
+class MessageGone(Exception):
+    """The message was deleted, e.g. as a duplicate by a parallel invocation."""
+
+
 class DiscordClient:
     def __init__(self) -> None:
         # requests is preinstalled in the DO python runtime; anything else would need a build.sh
@@ -64,7 +68,9 @@ class DiscordClient:
         self._session.headers["Authorization"] = f"Bot {os.environ['DISCORD_TOKEN']}"
 
     def _call(self, method: str, path: str, **kwargs) -> dict | list | None:
-        resp = self._session.request(method, f"{DISCORD_API}{path}", timeout=10, **kwargs)
+        resp = self._session.request(method, f"{DISCORD_API}{path}", timeout=5, **kwargs)
+        if resp.status_code == 404 and method in ("GET", "PATCH") and "/messages/" in path:
+            raise MessageGone(path)
         resp.raise_for_status()
         return resp.json() if resp.content else None
 
@@ -259,20 +265,32 @@ def _recent(messages: list[dict], footer: str, window: timedelta) -> list[dict]:
     return sorted(found, key=lambda m: int(m["id"]))
 
 
-def deliver(client, channel_id: str, update: Update, window: timedelta) -> str:
-    # Same-second bursts arrive as parallel invocations; spread them out before reading the channel
-    _sleep(random.uniform(0.5, 3))
+def jitter() -> None:
+    """Spread out a same-second burst of parallel invocations before they read the channel.
 
+    Called once per event, not per channel: GitHub gives up on a delivery after about 10 s, so the worst
+    case (two channels, each with a full edit retry loop) has to stay well under that.
+    """
+    _sleep(random.uniform(0.3, 1.5))
+
+
+def deliver(client, channel_id: str, update: Update, window: timedelta) -> str:
     try:
         recent = _recent(client.get_messages(channel_id), update.footer, window)
     except Exception as e:
         # e.g. missing Read Message History: post rather than drop the event
-        embed = update.apply(None)
-        client.post(channel_id, embed)
+        client.post(channel_id, update.apply(None))
         return f"Could not read channel {channel_id} ({e}); posted a new message"
 
     if recent:
-        return _edit(client, channel_id, recent[-1], update)
+        try:
+            # The oldest wins, matching the duplicate cleanup below
+            return _edit(client, channel_id, recent[0], update)
+        except MessageGone:
+            # Deleted while we worked on it (a duplicate cleaned up by another invocation): look again
+            recent = _recent(client.get_messages(channel_id), update.footer, window)
+            if recent:
+                return _edit(client, channel_id, recent[0], update)
 
     posted = client.post(channel_id, update.apply(None))
 
@@ -294,14 +312,16 @@ def _edit(client, channel_id: str, message: dict, update: Update) -> str:
     if embed is None:
         return f"Message {message['id']} in channel {channel_id} already up to date"
 
-    for _ in range(3):
+    for _ in range(2):
         client.patch(channel_id, message["id"], embed)
         # Read back: a parallel invocation working from an older copy may have overwritten this edit
-        _sleep(1)
-        message = client.get_message(channel_id, message["id"])
-        if update.present_in(message["embeds"][0]):
-            break
-        embed = update.apply(message["embeds"][0])
+        _sleep(0.5)
+        current = client.get_message(channel_id, message["id"])
+        if update.present_in(current["embeds"][0]):
+            return f"Updated message {message['id']} in channel {channel_id}"
+        embed = update.apply(current["embeds"][0])
         if embed is None:
-            break
-    return f"Updated message {message['id']} in channel {channel_id}"
+            return f"Updated message {message['id']} in channel {channel_id}"
+    # Last attempt, without reading back
+    client.patch(channel_id, message["id"], embed)
+    return f"Updated message {message['id']} in channel {channel_id} (after retries)"

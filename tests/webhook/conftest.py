@@ -16,10 +16,15 @@ class FakeDiscord:
         self.fail_reads = False
         # One-shot hooks to simulate a parallel invocation acting at an awkward moment
         self.before_post = None
+        self.before_patch = None
         self.after_patch = None
+        self.patches = 0
 
     def _find(self, channel_id: str, message_id: str) -> dict:
-        return next(m for m in self.channels[channel_id] if m["id"] == message_id)
+        for m in self.channels[channel_id]:
+            if m["id"] == message_id:
+                return m
+        raise grouping.MessageGone(message_id)
 
     def get_messages(self, channel_id: str) -> list[dict]:
         if self.fail_reads:
@@ -45,13 +50,17 @@ class FakeDiscord:
         return copy.deepcopy(message)
 
     def patch(self, channel_id: str, message_id: str, embed: dict) -> dict:
+        self.patches += 1
+        if hook := self.before_patch:
+            self.before_patch = None
+            hook(self, channel_id, message_id)
         message = self._find(channel_id, message_id)
         previous = message["embeds"][0]
         message["embeds"] = [copy.deepcopy(embed)]
         message["edited_timestamp"] = grouping._now().isoformat()
-        if hook := self.after_patch:
+        # A hook returning True stays in place for every patch
+        if (hook := self.after_patch) and hook(message, previous) is not True:
             self.after_patch = None
-            hook(message, previous)
         return copy.deepcopy(message)
 
     def delete(self, channel_id: str, message_id: str) -> None:

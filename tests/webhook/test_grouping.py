@@ -265,3 +265,44 @@ def test_written_embed_has_only_writable_keys(discord):
     embed = discord.embeds(CHANNEL)[0]
     assert "type" not in embed
     assert "proxy_icon_url" not in embed["author"]
+
+
+def test_edits_the_oldest_of_two_matching_messages(discord):
+    send(discord, review_requested("a"))
+    # A duplicate from a race that hasn't been cleaned up yet
+    update = grouping.build_update(*review_requested("a"), owner="randovania", author=AUTHOR)
+    discord.post(CHANNEL, update.apply(None))
+
+    send(discord, review_requested("a", "b"))
+    first, second = discord.embeds(CHANNEL)
+    assert fields(first)["Reviewers"] == "a, b"
+    assert fields(second)["Reviewers"] == "a"
+
+
+def test_target_deleted_mid_edit_looks_again(discord):
+    send(discord, pr_event("opened"))
+
+    def deleted_by_someone_else(fake, channel_id, message_id):
+        fake.delete(channel_id, message_id)
+
+    discord.before_patch = deleted_by_someone_else
+    send(discord, review_requested("a"))
+
+    [embed] = discord.embeds(CHANNEL)
+    assert "review requested" in embed["title"]
+    assert fields(embed)["Reviewers"] == "a"
+
+
+def test_keeps_writing_when_always_overwritten(discord):
+    send(discord, pr_event("opened"))
+
+    def always_stale(message, previous):
+        message["embeds"] = [previous]
+        return True
+
+    discord.after_patch = always_stale
+    result = send(discord, review_requested("a"))
+
+    # Two verified attempts, then one final write
+    assert discord.patches == 3
+    assert "after retries" in result

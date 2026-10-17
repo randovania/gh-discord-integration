@@ -16,4 +16,6 @@ packages:
         environment:
           DISCORD_TOKEN: "${DISCORD_TOKEN}"
         annotations: {}
-        limits: {}
+        limits:
+          # Milliseconds. Explicit, as DO doesn't document the default; grouping waits for Discord a few times
+          timeout: 30000

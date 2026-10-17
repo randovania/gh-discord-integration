@@ -172,6 +172,20 @@ class TestProcess:
         assert embed["footer"]["text"] == "randovania/test-repo#42"
         assert "Posted new message" in result["body"]
 
+    def test_grouped_event_jitters_once_for_all_channels(self, discord, monkeypatch):
+        sleeps = []
+        monkeypatch.setattr("grouping._sleep", sleeps.append)
+        config = {
+            "github": {"org": "randovania"},
+            "discord": {"channels": {"default": DISCORD_CHANNEL_ID, "a": "111", "b": "222"}},
+            "repo_channels": {"test-repo": {"channels": ["a", "b"]}},
+            "label_channels": {},
+        }
+        with patch("routing.load_config", return_value=config):
+            redirect.process(load_webhook("pull_request_opened.json"))
+        assert len(sleeps) == 1
+        assert sleeps[0] <= 1.5
+
     def test_posts_to_every_resolved_channel_once(self, discord, monkeypatch):
         monkeypatch.setenv("DISCORD_TOKEN", "test-bot-token")
         config = {

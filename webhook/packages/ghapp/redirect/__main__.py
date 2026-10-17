@@ -319,6 +319,9 @@ def process(args: dict) -> dict:
     owner = repo.get("owner", {}).get("login") or repo.get("full_name", "").partition("/")[0]
     if event == "push" and not routing.wants_push(owner, repository, config):
         return {"body": f"push events from {owner}/{repository} are not enabled — skipped"}
+    comment_author = args.get("comment", {}).get("user", {}).get("login")
+    if comment_author in config.get("webhook", {}).get("ignored_comment_authors", []):
+        return {"body": f"comment by {comment_author} — skipped"}
     channel_names = routing.resolve_channels(owner, repository, labels, config)
     if not channel_names:
         return {"body": f"ignored repository {owner}/{repository}"}

@@ -27,6 +27,12 @@ push_repos = [
     "MetroidAdvRandomizerSystem/mars-patcher-py",
 ]
 
+# Comments (on issues, PRs, reviews and commits) by these accounts are dropped, e.g. CI reports.
+# Their other events, like releases published by a workflow, still post.
+ignored_comment_authors = [
+    "github-actions[bot]",
+]
+
 # Discord channel IDs per named channel.
 # Right-click a channel in Discord (with Developer Mode on) → Copy Channel ID.
 # Bot token is read from the DISCORD_TOKEN environment variable.

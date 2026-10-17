@@ -202,6 +202,28 @@ class TestProcess:
         assert list(discord.channels) == ["111", "222", DISCORD_CHANNEL_ID]
         assert all(len(messages) == 1 for messages in discord.channels.values())
 
+    @pytest.mark.parametrize("event", ["issue_comment", "pull_request_review_comment", "commit_comment"])
+    def test_comment_by_ignored_author_dropped(self, event):
+        args = {
+            **load_webhook("pull_request_opened.json"),
+            "http": {"headers": {"x-github-event": event}},
+            "action": "created",
+            "issue": {"number": 9663, "title": "Upgrade to PySide 6.12", "pull_request": {}, "labels": []},
+            "comment": {"user": {"login": "github-actions[bot]"}, "body": "# uv Lockfile Report"},
+            "sender": {"login": "github-actions[bot]"},
+        }
+        config = {**TEST_CONFIG, "webhook": {"ignored_comment_authors": ["github-actions[bot]"]}}
+        with (
+            patch("routing.load_config", return_value=config),
+            patch("requests.post") as post,
+        ):
+            result = redirect.process(args)
+        assert result == {"body": "comment by github-actions[bot] — skipped"}
+        post.assert_not_called()
+
+    def test_bundled_config_ignores_actions_comments(self):
+        assert "github-actions[bot]" in redirect._local("routing").load_config()["webhook"]["ignored_comment_authors"]
+
     def test_push_dropped_unless_enabled(self, monkeypatch):
         monkeypatch.setenv("DISCORD_TOKEN", "test-bot-token")
         args = load_webhook("push.json")

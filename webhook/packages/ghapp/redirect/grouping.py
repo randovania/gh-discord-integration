@@ -5,7 +5,8 @@ event looks for the PR's recent message in the channel (found by its footer key)
 instead of posting a new message.
 
 Groups, per PR:
-- activity: opened, review_requested, synchronize. Reviewers and a push counter accumulate as fields.
+- activity: opened, ready_for_review, review_requested, synchronize, edited. Reviewers and a push counter
+  accumulate as fields; edits update the title and description.
 - merge: approved review, auto_merge_enabled, enqueued, dequeued, merged. A timeline accumulates.
 
 GitHub often sends a burst of these in the same second, handled by parallel invocations. To keep that
@@ -107,6 +108,7 @@ class Update:
     # embed key -> (before, after): only applied while the message still shows "before", so an older
     # edit handled late can't overwrite a newer one
     replace: dict[str, tuple[str, str]] = field(default_factory=dict)
+    pr_title: tuple[int, str] | None = None  # (number, title): the PR was renamed
 
     def apply(self, existing: dict | None) -> dict | None:
         """Return the embed to write, or None if the existing one already has everything."""
@@ -119,6 +121,9 @@ class Update:
             for key, (before, after) in self.replace.items():
                 if (embed.get(key) or "") == before:
                     embed[key] = after
+            if self.pr_title and f": #{self.pr_title[0]} " in embed.get("title", ""):
+                prefix = embed["title"].split(f": #{self.pr_title[0]} ", 1)[0]
+                embed["title"] = f"{prefix}: #{self.pr_title[0]} {self.pr_title[1]}"
 
         fields = {f["name"]: f["value"] for f in embed.get("fields", [])}
         if self.reviewers:
@@ -262,6 +267,22 @@ def build_update(event: str, args: dict, owner: str, author: dict) -> Update | N
     if event == "pull_request" and action == "opened":
         opened = embed(_COLOR_GREEN, "opened", (pr.get("body") or "")[:300])
         return update(footer=key, fresh=opened, reviewers=all_reviewers, opened=opened)
+
+    if event == "pull_request" and action == "ready_for_review":
+        # Out of draft: as good as opened, and takes over whatever message the draft already has
+        ready = embed(_COLOR_GREEN, "ready for review", (pr.get("body") or "")[:300])
+        return update(footer=key, fresh=ready, reviewers=all_reviewers, opened=ready)
+
+    if event == "pull_request" and action == "edited":
+        # Only worth updating the PR's recent message; never posts on its own
+        changes = args.get("changes") or {}
+        kwargs = {}
+        if "body" in changes:
+            before = (changes["body"].get("from") or "")[:300]
+            kwargs["replace"] = {"description": (before, (pr.get("body") or "")[:300])}
+        if "title" in changes:
+            kwargs["pr_title"] = (n, pr_title)
+        return update(footer=key, fresh=None, **kwargs)
 
     if event == "pull_request" and action == "review_requested":
         requested = args.get("requested_reviewer", {}).get("login") or args.get("requested_team", {}).get("name")

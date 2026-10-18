@@ -205,7 +205,6 @@ def test_merge_after_window_posts_new_message(discord, clock):
     ("event", "args"),
     [
         pr_event("closed"),
-        pr_event("edited"),
         ("pull_request_review", {**pr_event("submitted")[1], "review": {"state": "changes_requested"}}),
         ("issues", {"action": "opened", "issue": {"number": 1}, "repository": {"name": "x"}}),
     ],
@@ -382,3 +381,51 @@ def test_release_edit_of_other_fields_changes_nothing(discord):
     send(discord, release_event("published", "notes"))
     result = send(discord, release_event("edited", "notes", changes={"prerelease": {"from": True}}))
     assert "already up to date" in result
+
+
+# ---------------------------------------------------------------------------
+# Draft → ready, edits
+# ---------------------------------------------------------------------------
+
+
+def test_push_ready_and_edit_become_one_message(discord):
+    send(discord, pr_event("synchronize"))
+    send(discord, pr_event("ready_for_review", pr={"body": "Updates models."}))
+    send(
+        discord,
+        pr_event(
+            "edited",
+            pr={"title": "Update various models", "body": "Updates several models."},
+            changes={"title": {"from": "MSAPI Parsing"}, "body": {"from": "Updates models."}},
+        ),
+    )
+
+    [embed] = discord.embeds(CHANNEL)
+    assert embed["title"] == "[mercury] Pull request ready for review: #351 Update various models"
+    assert embed["description"] == "Updates several models."
+    assert embed["color"] == grouping._COLOR_GREEN
+
+
+def test_ready_for_review_alone_posts_with_description(discord):
+    send(discord, pr_event("ready_for_review"))
+    [embed] = discord.embeds(CHANNEL)
+    assert "ready for review" in embed["title"]
+    assert embed["description"] == "Adds parsing."
+
+
+def test_edit_without_recent_message_posts_nothing(discord):
+    result = send(discord, pr_event("edited", changes={"title": {"from": "Old"}}))
+    assert discord.embeds(CHANNEL) == []
+    assert "No recent message" in result
+
+
+def test_body_edit_only_touches_a_shown_description(discord):
+    send(discord, pr_event("synchronize"))
+    send(discord, pr_event("edited", pr={"body": "New"}, changes={"body": {"from": "Adds parsing."}}))
+    assert "description" not in discord.embeds(CHANNEL)[0]
+
+
+def test_stale_body_edit_is_ignored(discord):
+    send(discord, pr_event("opened", pr={"body": "C"}))
+    send(discord, pr_event("edited", pr={"body": "B"}, changes={"body": {"from": "A"}}))
+    assert discord.embeds(CHANNEL)[0]["description"] == "C"

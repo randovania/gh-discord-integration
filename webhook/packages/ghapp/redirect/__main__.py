@@ -174,7 +174,13 @@ def _build_message(event: str, args: dict) -> dict:
         url = issue.get("html_url", "")
         # The description is only news when the issue is opened, not on every later action
         body = (issue.get("body") or "")[:300] if action == "opened" else ""
-        color = _COLOR_GREEN if action == "opened" else (_COLOR_RED if action == "closed" else _COLOR_BLUE)
+        if action == "opened":
+            color = _COLOR_GREEN
+        elif action == "closed":
+            # Like GitHub: purple for completed (or no reason), gray for not planned / duplicate
+            color = _COLOR_GRAY if issue.get("state_reason") in ("not_planned", "duplicate") else _COLOR_PURPLE
+        else:
+            color = _COLOR_BLUE
         return {"embeds": [_embed(color, f"[{repo}] Issue {action}: #{n} {title}", url, body, args)]}
 
     if event == "issue_comment":

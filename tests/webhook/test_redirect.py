@@ -77,8 +77,22 @@ class TestBuildMessage:
     def test_issue_closed_omits_description(self):
         args = {**load_webhook("pull_request_opened.json"), "action": "closed", "issue": {"number": 1, "body": "Hi!"}}
         embed = redirect._build_message("issues", args)["embeds"][0]
-        assert embed["color"] == redirect._COLOR_RED
+        assert embed["color"] == redirect._COLOR_PURPLE
         assert "description" not in embed
+
+    @pytest.mark.parametrize(
+        ("state_reason", "color"),
+        [
+            ("completed", redirect._COLOR_PURPLE),
+            (None, redirect._COLOR_PURPLE),
+            ("not_planned", redirect._COLOR_GRAY),
+            ("duplicate", redirect._COLOR_GRAY),
+        ],
+    )
+    def test_issue_closed_color_by_state_reason(self, state_reason, color):
+        issue = {"number": 1, "state_reason": state_reason}
+        args = {**load_webhook("pull_request_opened.json"), "action": "closed", "issue": issue}
+        assert redirect._build_message("issues", args)["embeds"][0]["color"] == color
 
     def test_pull_request_body_truncated_at_300(self):
         args = load_webhook("pull_request_opened.json")

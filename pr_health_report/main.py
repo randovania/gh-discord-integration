@@ -91,7 +91,7 @@ def fetch_prs(
 
     prs: list[dict] = []
     for repo in org.get_repos():
-        if repo.archived or repo.fork:
+        if repo.archived:
             continue
         if skip_repos and repo.name in skip_repos:
             print(f"  {repo.name}: skipped")

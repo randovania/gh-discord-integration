@@ -17,6 +17,7 @@ newer one merges itself into the older one and deletes itself.
 requests + stdlib only: the DO function runs on the python:3.11 runtime.
 """
 
+import contextlib
 import os
 import random
 import time
@@ -387,6 +388,49 @@ def deliver(client, channel_id: str, update: Update, window: timedelta) -> str:
     result = _edit(client, channel_id, oldest, update)
     client.delete(channel_id, posted["id"])
     return f"{result} (removed duplicate {posted['id']})"
+
+
+def pr_footers(owner: str, repo: str, number: int) -> list[str]:
+    key = f"{owner}/{repo}#{number}"
+    return [key, key + _MERGE_SUFFIX]
+
+
+def move(client, from_ids: list[str], to_ids: list[str], footers: list[str], window: timedelta) -> str:
+    """Move a PR's recent messages from some channels to others, e.g. after its label changed the routing.
+
+    The embed is copied as it is, keeping what has accumulated on it (reviewers, pushes, merge timeline).
+    A channel that already has a recent message for the footer is left as it is. Copies are posted before
+    the originals are deleted, so a failure half way never loses the message.
+    """
+    results = []
+    for footer in footers:
+        found: list[tuple[str, list[dict]]] = []  # (channel, its recent messages), removed afterwards
+        for channel_id in from_ids:
+            try:
+                recent = _recent(client.get_messages(channel_id), footer, window)
+            except Exception as e:
+                results.append(f"Could not read channel {channel_id} ({e})")
+                continue
+            if recent:
+                found.append((channel_id, recent))
+        if not found:
+            continue
+        source = found[0][1][0]
+
+        for channel_id in to_ids:
+            try:
+                if _recent(client.get_messages(channel_id), footer, window):
+                    continue
+            except Exception:
+                pass  # can't tell whether it is there: copy anyway, a duplicate beats a lost message
+            posted = client.post(channel_id, _writable(source["embeds"][0]))
+            results.append(f"Moved {footer} to channel {channel_id} as message {posted['id']}")
+        for channel_id, messages in found:
+            for message in messages:
+                with contextlib.suppress(MessageGone):
+                    client.delete(channel_id, message["id"])
+            results.append(f"Removed {footer} from channel {channel_id}")
+    return "\n".join(results) or "No recent message to move"
 
 
 def _edit(client, channel_id: str, message: dict, update: Update) -> str:

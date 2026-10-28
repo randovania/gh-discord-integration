@@ -294,6 +294,46 @@ def _build_message(event: str, args: dict) -> dict:
     return {}
 
 
+def _channel_ids(channel_names: list[str], channels_config: dict[str, str]) -> dict[str, str]:
+    """Channel ID -> name. Unknown names fall back to 'default'; deduped so a channel never gets an event twice."""
+    channel_ids: dict[str, str] = {}
+    for channel_name in channel_names:
+        channel_id = channels_config.get(channel_name) or channels_config.get("default", "")
+        if channel_id:
+            channel_ids.setdefault(channel_id, channel_name)
+    return channel_ids
+
+
+def _move_on_label_change(args: dict, labels: list[str], owner: str, repository: str, config: dict) -> str:
+    """Move the PR's recent messages when adding/removing a label changes which channels it routes to.
+
+    Lets someone who forgot the game label when creating the PR fix it afterwards. Only messages still
+    inside the grouping window are moved; nothing is posted if the PR has none.
+    """
+    routing = _local("routing")
+    grouping = _local("grouping")
+    label = (args.get("label") or {}).get("name")
+    if not label:
+        return "label change without a label — skipped"
+    with_label = {*labels, label}
+    without_label = set(labels) - {label}
+    after, before = (with_label, without_label) if args["action"] == "labeled" else (without_label, with_label)
+
+    channels_config: dict[str, str] = config.get("discord", {}).get("channels", {})
+    old_ids = _channel_ids(routing.resolve_channels(owner, repository, sorted(before), config), channels_config)
+    new_ids = _channel_ids(routing.resolve_channels(owner, repository, sorted(after), config), channels_config)
+    leaving = [i for i in old_ids if i not in new_ids]
+    arriving = [i for i in new_ids if i not in old_ids]
+    if not leaving and not arriving:
+        return f"label '{label}' does not change the channels — skipped"
+
+    client = grouping.DiscordClient()
+    grouping.jitter()
+    window = timedelta(minutes=config.get("webhook", {}).get("merge_window_minutes", 30))
+    footers = grouping.pr_footers(owner, repository, args["pull_request"]["number"])
+    return grouping.move(client, leaving, arriving, footers, window)
+
+
 def process(args: dict) -> dict:
     event = args.get("http", {}).get("headers", {}).get("x-github-event", "unknown")
     print(f"Received event: {event}")
@@ -313,10 +353,6 @@ def process(args: dict) -> dict:
     else:
         labels = []
 
-    payload = _build_message(event, args)
-    if not payload:
-        return {"body": f"event '{event}' produces no message — skipped"}
-
     routing = _local("routing")
     config = routing.load_config()
     channels_config: dict[str, str] = config.get("discord", {}).get("channels", {})
@@ -324,6 +360,14 @@ def process(args: dict) -> dict:
     repo = args["repository"]
     repository = repo["name"]
     owner = repo.get("owner", {}).get("login") or repo.get("full_name", "").partition("/")[0]
+
+    if event == "pull_request" and args.get("action") in _SKIPPED_ACTIONS:
+        return {"body": _move_on_label_change(args, labels, owner, repository, config)}
+
+    payload = _build_message(event, args)
+    if not payload:
+        return {"body": f"event '{event}' produces no message — skipped"}
+
     if event == "push" and not routing.wants_push(owner, repository, config):
         return {"body": f"push events from {owner}/{repository} are not enabled — skipped"}
     comment_author = args.get("comment", {}).get("user", {}).get("login")
@@ -333,13 +377,7 @@ def process(args: dict) -> dict:
     if not channel_names:
         return {"body": f"ignored repository {owner}/{repository}"}
 
-    # Unknown channel names fall back to 'default'; dedupe so a channel never gets the same event twice
-    channel_ids: dict[str, str] = {}
-    for channel_name in channel_names:
-        channel_id = channels_config.get(channel_name) or channels_config.get("default", "")
-        if channel_id:
-            channel_ids.setdefault(channel_id, channel_name)
-
+    channel_ids = _channel_ids(channel_names, channels_config)
     if not channel_ids:
         return {"body": f"no channel ID configured for {channel_names} or 'default'"}
 

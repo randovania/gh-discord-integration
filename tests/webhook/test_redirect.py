@@ -2,6 +2,7 @@ import importlib.util
 import json
 import sys
 from pathlib import Path
+from typing import ClassVar
 from unittest.mock import MagicMock, patch
 
 import pytest
@@ -243,6 +244,68 @@ class TestProcess:
             redirect.process(args)
         assert list(discord.channels) == ["111", "222", DISCORD_CHANNEL_ID]
         assert all(len(messages) == 1 for messages in discord.channels.values())
+
+    @staticmethod
+    def label_change(action: str, label: str, labels: list[str]) -> dict:
+        args = load_webhook("pull_request_opened.json")
+        pr = {**args["pull_request"], "labels": [{"name": n} for n in labels]}
+        return {**args, "action": action, "pull_request": pr, "label": {"name": label}}
+
+    LABEL_CONFIG: ClassVar[dict] = {
+        "github": {"org": "randovania"},
+        "discord": {"channels": {"default": "100", "prime": "200", "dread": "300"}},
+        "repo_channels": {},
+        "label_channels": {"game: Prime": "prime", "game: Dread": "dread"},
+    }
+
+    def test_adding_game_label_moves_pr_message(self, discord):
+        with patch("routing.load_config", return_value=self.LABEL_CONFIG):
+            redirect.process(load_webhook("pull_request_opened.json"))
+            assert len(discord.channels["100"]) == 1
+            result = redirect.process(self.label_change("labeled", "game: Prime", ["game: Prime"]))
+        assert discord.channels["100"] == []
+        [embed] = discord.embeds("200")
+        assert "Pull request opened" in embed["title"]
+        assert "Moved" in result["body"]
+
+    def test_removing_game_label_moves_pr_message_back(self, discord):
+        with patch("routing.load_config", return_value=self.LABEL_CONFIG):
+            redirect.process(
+                {
+                    **load_webhook("pull_request_opened.json"),
+                    "pull_request": {
+                        **load_webhook("pull_request_opened.json")["pull_request"],
+                        "labels": [{"name": "game: Prime"}],
+                    },
+                }
+            )
+            assert len(discord.channels["200"]) == 1
+            redirect.process(self.label_change("unlabeled", "game: Prime", []))
+        assert discord.channels["200"] == []
+        assert len(discord.channels["100"]) == 1
+
+    def test_label_without_routing_change_leaves_messages(self, discord):
+        with patch("routing.load_config", return_value=self.LABEL_CONFIG):
+            redirect.process(load_webhook("pull_request_opened.json"))
+            result = redirect.process(self.label_change("labeled", "bug", ["bug"]))
+        assert len(discord.channels["100"]) == 1
+        assert "does not change the channels" in result["body"]
+
+    def test_label_change_without_message_posts_nothing(self, discord):
+        with patch("routing.load_config", return_value=self.LABEL_CONFIG):
+            result = redirect.process(self.label_change("labeled", "game: Prime", ["game: Prime"]))
+        assert not any(discord.channels.values())
+        assert "No recent message" in result["body"]
+
+    def test_conflicting_game_labels_move_to_default(self, discord):
+        with patch("routing.load_config", return_value=self.LABEL_CONFIG):
+            opened = load_webhook("pull_request_opened.json")
+            redirect.process(
+                {**opened, "pull_request": {**opened["pull_request"], "labels": [{"name": "game: Prime"}]}}
+            )
+            redirect.process(self.label_change("labeled", "game: Dread", ["game: Prime", "game: Dread"]))
+        assert discord.channels["200"] == []
+        assert len(discord.channels["100"]) == 1
 
     @pytest.mark.parametrize("event", ["issue_comment", "pull_request_review_comment", "commit_comment"])
     def test_comment_by_ignored_author_dropped(self, event):

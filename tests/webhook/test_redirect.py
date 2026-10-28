@@ -284,6 +284,36 @@ class TestProcess:
         assert discord.channels["200"] == []
         assert len(discord.channels["100"]) == 1
 
+    def test_adding_game_label_moves_issue_message(self, discord, monkeypatch):
+        monkeypatch.setenv("DISCORD_TOKEN", "test-bot-token")
+        base = load_webhook("pull_request_opened.json")
+        issue = {"number": 7, "title": "Crash", "html_url": "u", "body": "b", "labels": []}
+        opened = {**base, "action": "opened", "issue": issue}
+        labeled = {
+            **base,
+            "action": "labeled",
+            "issue": {**issue, "labels": [{"name": "game: Prime"}]},
+            "label": {"name": "game: Prime"},
+        }
+        # The webhook for the issue has no pull_request key
+        opened.pop("pull_request", None)
+        labeled.pop("pull_request", None)
+        opened["http"] = {"headers": {"x-github-event": "issues"}}
+        labeled["http"] = {"headers": {"x-github-event": "issues"}}
+        with (
+            patch("routing.load_config", return_value=self.LABEL_CONFIG),
+            patch(
+                "requests.post",
+                side_effect=lambda url, json, **_: discord.post(url.split("/")[-2], json["embeds"][0]) and MagicMock(),
+            ),
+        ):
+            redirect.process(opened)
+            assert len(discord.channels["100"]) == 1
+            redirect.process(labeled)
+        assert discord.channels["100"] == []
+        [embed] = discord.embeds("200")
+        assert "Issue opened" in embed["title"]
+
     def test_label_without_routing_change_leaves_messages(self, discord):
         with patch("routing.load_config", return_value=self.LABEL_CONFIG):
             redirect.process(load_webhook("pull_request_opened.json"))

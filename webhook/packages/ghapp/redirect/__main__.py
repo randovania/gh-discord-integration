@@ -181,7 +181,11 @@ def _build_message(event: str, args: dict) -> dict:
             color = _COLOR_GRAY if issue.get("state_reason") in ("not_planned", "duplicate") else _COLOR_PURPLE
         else:
             color = _COLOR_BLUE
-        return {"embeds": [_embed(color, f"[{repo}] Issue {action}: #{n} {title}", url, body, args)]}
+        embed = _embed(color, f"[{repo}] Issue {action}: #{n} {title}", url, body, args)
+        if action == "opened":
+            # Lets a later label change find this message and move it (see grouping.move)
+            embed["footer"] = {"text": f"{_owner(args['repository'])}/{repo}#{n}"}
+        return {"embeds": [embed]}
 
     if event == "issue_comment":
         action = args.get("action", "?")
@@ -294,6 +298,10 @@ def _build_message(event: str, args: dict) -> dict:
     return {}
 
 
+def _owner(repo: dict) -> str:
+    return repo.get("owner", {}).get("login") or repo.get("full_name", "").partition("/")[0]
+
+
 def _channel_ids(channel_names: list[str], channels_config: dict[str, str]) -> dict[str, str]:
     """Channel ID -> name. Unknown names fall back to 'default'; deduped so a channel never gets an event twice."""
     channel_ids: dict[str, str] = {}
@@ -305,7 +313,7 @@ def _channel_ids(channel_names: list[str], channels_config: dict[str, str]) -> d
 
 
 def _move_on_label_change(args: dict, labels: list[str], owner: str, repository: str, config: dict) -> str:
-    """Move the PR's recent messages when adding/removing a label changes which channels it routes to.
+    """Move the PR's or issue's recent messages when adding/removing a label changes which channels it routes to.
 
     Lets someone who forgot the game label when creating the PR fix it afterwards. Only messages still
     inside the grouping window are moved; nothing is posted if the PR has none.
@@ -330,7 +338,8 @@ def _move_on_label_change(args: dict, labels: list[str], owner: str, repository:
     client = grouping.DiscordClient()
     grouping.jitter()
     window = timedelta(minutes=config.get("webhook", {}).get("merge_window_minutes", 30))
-    footers = grouping.pr_footers(owner, repository, args["pull_request"]["number"])
+    number = (args.get("pull_request") or args["issue"])["number"]
+    footers = grouping.pr_footers(owner, repository, number)
     return grouping.move(client, leaving, arriving, footers, window)
 
 
@@ -359,9 +368,9 @@ def process(args: dict) -> dict:
 
     repo = args["repository"]
     repository = repo["name"]
-    owner = repo.get("owner", {}).get("login") or repo.get("full_name", "").partition("/")[0]
+    owner = _owner(repo)
 
-    if event == "pull_request" and args.get("action") in _SKIPPED_ACTIONS:
+    if event in ("pull_request", "issues") and args.get("action") in _SKIPPED_ACTIONS:
         return {"body": _move_on_label_change(args, labels, owner, repository, config)}
 
     payload = _build_message(event, args)

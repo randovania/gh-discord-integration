@@ -343,9 +343,19 @@ def _move_on_label_change(args: dict, labels: list[str], owner: str, repository:
     return grouping.move(client, leaving, arriving, footers, window)
 
 
+# Everything logged during one invocation. DO's console doesn't show function output for App Platform apps,
+# so main() also appends these lines to the response body, visible in GitHub's Recent Deliveries.
+_log_lines: list[str] = []
+
+
+def _log(message: str) -> None:
+    print(message)
+    _log_lines.append(message)
+
+
 def process(args: dict) -> dict:
     event = args.get("http", {}).get("headers", {}).get("x-github-event", "unknown")
-    print(f"Received event: {event}")
+    _log(f"Received event: {event} ({args.get('action')}) for {args.get('repository', {}).get('full_name')}")
 
     if "repository" not in args:
         return {"body": "unsupported request"}
@@ -383,6 +393,7 @@ def process(args: dict) -> dict:
     if comment_author in config.get("webhook", {}).get("ignored_comment_authors", []):
         return {"body": f"comment by {comment_author} — skipped"}
     channel_names = routing.resolve_channels(owner, repository, labels, config)
+    _log(f"Labels {labels} resolve to channels {channel_names}")
     if not channel_names:
         return {"body": f"ignored repository {owner}/{repository}"}
 
@@ -401,7 +412,7 @@ def process(args: dict) -> dict:
 
     results = []
     for channel_id, channel_name in channel_ids.items():
-        print(f"Routing {event} from {owner}/{repository} to channel {channel_name} ({channel_id})")
+        _log(f"Routing {event} from {owner}/{repository} to channel {channel_name} ({channel_id})")
         if update:
             results.append(grouping.deliver(client, channel_id, update, window))
         else:
@@ -410,8 +421,12 @@ def process(args: dict) -> dict:
 
 
 def main(args: dict, context=None) -> dict:
+    _log_lines.clear()
     try:
-        return process(args)
+        response = process(args)
     except Exception as e:
         # Non-200 so the failure (and its traceback) shows up in the GitHub App's Recent Deliveries
-        return {"statusCode": 500, "body": "".join(traceback.format_exception(e))}
+        response = {"statusCode": 500, "body": "".join(traceback.format_exception(e))}
+    log = "\n".join(_log_lines)
+    response["body"] = f"{response['body']}\n\n--- log ---\n{log}"
+    return response

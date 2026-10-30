@@ -109,6 +109,7 @@ label_channels = { "game: mf" = "metroid-fusion-dev", "game: zm" = "metroid-zero
 "game: Metroid Prime 1"         = "metroid-prime-dev"
 "game: Metroid Prime 2 Echoes"  = "mp2-echoes-dev"
 # "game: Metroid Prime 3 Corruption"         = "mp3-corruption-dev"
+"game: Metroid Planets"         = "metroid-planets-dev"
 "game: Metroid Prime Hunters"   = "mp-hunters-dev"
 "game: Metroid Zero Mission"    = "metroid-zero-mission-dev"
 "game: Metroid: Samus Returns"  = "samus-returns-dev"
